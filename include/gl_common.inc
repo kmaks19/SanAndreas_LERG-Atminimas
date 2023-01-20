@@ -4,6 +4,8 @@
 //
 //----------------------------------------------------------
 
+#include <YSI\y_va>
+
 stock LoadStaticVehiclesFromFile(const filename[])
 {
 	new File:file_ptr;
@@ -73,6 +75,15 @@ stock LoadStaticVehiclesFromFile(const filename[])
 	printf("Loaded %d vehicles from: %s",vehicles_loaded,filename);
 	return vehicles_loaded;
 }
+
+stock SendFormatToAll(color, text[], va_args<>)
+{
+	new buffer[400];
+	va_format(buffer, sizeof buffer, text, va_start<2>);
+	return SendClientMessageToAll(color, buffer);
+}
+
+
 
 //----------------------------------------------------------
 

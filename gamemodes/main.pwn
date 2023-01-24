@@ -328,6 +328,7 @@ enum playerData
 	dprizpareigosenuo[31],
 	vipprizpareigosenuo[31],
 	aprizpareigosenuo[31],
+	direkopareigosenuo[31],
 	lastloginIP[16],
 	lastloginDATE[31],
 	LaikoLigoninej,
@@ -345,8 +346,10 @@ enum playerData
 	ParaseAdminams,
 	BanTimer,
 	BanLaikas,
-	permamute
-
+	permamute,
+	zaidejoMedikuXP,
+	zaidejoPolicijosXP,
+	zaidejoArmijosXP
 };
 new pInfo[MAX_PLAYERS][playerData];
 
@@ -618,6 +621,9 @@ public OnPlayerSpawn(playerid)
 		poRegistracijos[playerid] = false;
 		online[playerid] = true;
 		leisgyvistimer[playerid] = SetTimerEx("TikrinamGyvybes",500,true, "i", playerid);
+
+		mysql_format(connectionHandle, query, 140, "SELECT MedikoXP, PolicininkoXP, ArmijosXP FROM darbaiSuPakvietimais_xp WHERE Vardas = '%e'", playerName[playerid]);
+		mysql_tquery(connectionHandle, query, "OnPlayerJobXPLoad", "i", playerid);
 	}
 	if(poPrisijungimo[playerid])
 	{
@@ -658,6 +664,9 @@ public OnPlayerSpawn(playerid)
 		SetPlayerSkillLevel (playerid, WEAPONSKILL_PISTOL, 1);
 		online[playerid] = true;
 		leisgyvistimer[playerid] = SetTimerEx("TikrinamGyvybes",500,true, "i", playerid);
+
+		mysql_format(connectionHandle, query, 140, "SELECT MedikoXP, PolicininkoXP, ArmijosXP FROM darbaiSuPakvietimais_xp WHERE Vardas = '%e'", playerName[playerid]);
+		mysql_tquery(connectionHandle, query, "OnPlayerJobXPLoad", "i", playerid);
 	}
 	if(poMirties[playerid])
 	{
@@ -788,9 +797,28 @@ public e_COMMAND_ERRORS:OnPlayerCommandReceived(playerid, cmdtext[], e_COMMAND_E
     return COMMAND_OK;
 }
 
+YCMD:darbuxp(playerid, params[], help)
+{
+	inline showdarbuxp(pid, did, resp, litem, string:input[])
+	{
+		#pragma unused pid, did, litem, input
+		if(resp)
+		{
+				
+		}
+	}
+	new zBuffer[300], fBuffer[300];
+
+	format(fBuffer, sizeof(fBuffer), "{8596E9}•{ffffff} Medikø XP: {8596E9}%s\n\n{8596E9}•{ffffff} Policijos XP: {8596E9}%s\n\n{8596E9}•{ffffff} Armijos XP: {8596E9}%s{ffffff}",\
+	  konvertuoti_pinigus(pInfo[playerid][zaidejoMedikuXP]),  konvertuoti_pinigus(pInfo[playerid][zaidejoPolicijosXP]),  konvertuoti_pinigus(pInfo[playerid][zaidejoArmijosXP]));
+	strcat(zBuffer, fBuffer);
+
+	Dialog_ShowCallback(playerid, using inline showdarbuxp, DIALOG_STYLE_MSGBOX, "{ffffff}Darbø patirtis su pakvietimais", zBuffer, "Supratau", "");
+	return 1;
+}
+
 YCMD:vkomandos(playerid, params[], help)
 {
-
 	if(pInfo[playerid][VIP] == 1 || pInfo[playerid][ADMIN] == SAVININKAS)
 	{
 		new list[600];
@@ -798,7 +826,7 @@ YCMD:vkomandos(playerid, params[], help)
 
 		ShowPlayerDialog(playerid, vipkomandos, DIALOG_STYLE_MSGBOX, "VIP komandos", list, "Supratau", "");
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -881,7 +909,7 @@ YCMD:pasigydyti(playerid, params[], help)
 			pInfo[playerid][selfhealtimer] = gettime() + 300;//5min
 		}
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -934,7 +962,7 @@ YCMD:tpd(playerid, params[], help)
 		if(pInfo[playerid][ADMIN] < KOMANDOSNARIAI){pInfo[playerid][pinigai] -= 500; MSG(playerid, GREEN, "+ Nusiteleportavote iki darbo vietos uþ 500€");}
 		else return MSG(playerid, GREEN, "+ Nusiteleportavote iki darbo vietos!");
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -956,7 +984,7 @@ YCMD:vc(playerid, params[], help)
 		SendFormatVip(-1, "{ffff00}[VIP.CHAT] %s(%i): %s", playerName[playerid], playerid, msg);
 		SendFormatSav(-1, "{ffff00}[VIP.CHAT] %s(%i): %s", playerName[playerid], playerid, msg);
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -980,7 +1008,7 @@ YCMD:v(playerid, params[], help)
 			if(pInfo[playerid][VIP] == 1 || pInfo[playerid][ADMIN] == SAVININKAS){SendFormatToAll(-1, "{ffff1a}VIP {e6e600}%s(%i){ffff1a}: {ffff1a}%s", playerName[playerid], playerid, msg);}
 		}
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -994,7 +1022,7 @@ YCMD:vginklai(playerid, params[], help)
     	MSG(playerid, -1, "{00FF11}+ Gavote VIP ginklø paketà");
 	    pInfo[playerid][CmdVipTimerG] = gettime() + 300;//5min
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -1142,7 +1170,8 @@ YCMD:r(playerid, params[], help)
 
 	SendFormatToJob(pInfo[playerid][darbas], -1, "{f49e42}[RACIJA]: %s(%i): %s", playerName[playerid], playerid, text);
 
-	mysql_format(connectionHandle, query, 144, "INSERT INTO rlogas (kasparase, data, darbas, message) VALUES ('%s', '%s', '%i', '%s')", playerName[playerid], GautiData(1), pInfo[playerid][darbas], text);
+	mysql_format(connectionHandle, query, 144, "INSERT INTO rlogas (kasparase, data, darbas, message) VALUES ('%s', '%s', '%i', '%s')", \
+		playerName[playerid], GautiData(1), pInfo[playerid][darbas], text);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 	return 1;
 }
@@ -1246,10 +1275,12 @@ YCMD:vispeti(playerid, params[], help)
 
 		pInfo[id][visp] += 1;
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], playerName[id], 1);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+			GautiData(0), reason, playerName[playerid], playerName[id], 1);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `vipISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], playerName[id]);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `vipISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		if(pInfo[id][visp] >= 3)
@@ -1303,10 +1334,12 @@ function vispeti_off(playerid, name[], reason[])
 
 		vip_isp ++;
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], name, 1);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+			GautiData(0), reason, playerName[playerid], name, 1);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `vipISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], name);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `vipISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		if(vip_isp >= 3)
@@ -1338,16 +1371,20 @@ YCMD:ispetiunbanpriz(playerid, params[], help)
 		pInfo[id][unbanprizisp] ++;
 		UNBANPRIZ_INFO[prizisp]++;
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], playerName[id], 8);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+			GautiData(0), reason, playerName[playerid], playerName[id], 8);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `unbanprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], playerName[id]);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `unbanprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET unbanprizisp = '%i' WHERE vardas = '%e'", pInfo[id][unbanprizisp], playerName[id]);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET unbanprizisp = '%i' WHERE vardas = '%e'", \
+			pInfo[id][unbanprizisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 140, "UPDATE unban_priz SET prizisp = '%i' WHERE vardas = '%e'", pInfo[id][unbanprizisp], playerName[id]);
+		mysql_format(connectionHandle, query, 140, "UPDATE unban_priz SET prizisp = '%i' WHERE vardas = '%e'", \
+			pInfo[id][unbanprizisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		if(pInfo[id][unbanprizisp] >= 3)
@@ -1366,7 +1403,8 @@ YCMD:ispetiunbanpriz(playerid, params[], help)
 			mysql_format(connectionHandle, query, 140, "UPDATE unban_priz SET prizisp = '0', vardas = '', prizpareigosenuo = ''");
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET unbanpriziuretojas = '0', unbanprizisp = '0', unbanprizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
+			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET unbanpriziuretojas = '0', unbanprizisp = '0', unbanprizpareigosenuo = '' WHERE vardas = '%e'", \
+				playerName[id]);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 		}
 		else
@@ -1392,16 +1430,20 @@ YCMD:ispetidpriz(playerid, params[], help)
 		pInfo[id][dprizisp] ++;
 		DPRIZINFO[prizisp]++;
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], playerName[id], 4);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+			GautiData(0), reason, playerName[playerid], playerName[id], 4);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `dprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], playerName[id]);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `dprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET dprizisp = '%i' WHERE vardas = '%e'", pInfo[id][dprizisp], playerName[id]);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET dprizisp = '%i' WHERE vardas = '%e'", \
+			pInfo[id][dprizisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 140, "UPDATE dpriz SET prizisp = '%i' WHERE vardas = '%e'", pInfo[id][dprizisp], playerName[id]);
+		mysql_format(connectionHandle, query, 140, "UPDATE dpriz SET prizisp = '%i' WHERE vardas = '%e'", \
+			pInfo[id][dprizisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		if(pInfo[id][dprizisp] >= 3)
@@ -1462,10 +1504,12 @@ function aispeti_off(playerid, name[], reason[])
 
 		admin_isp ++;
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], name, 2);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+			GautiData(0), reason, playerName[playerid], name, 2);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `AdminISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], name);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `AdminISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		if(admin_isp >= 3)
@@ -1524,10 +1568,12 @@ function ispetiunbanpriz_off(playerid, name[], reason[])
 
 		unbanprizo_isp ++;
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], name, 8);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+			GautiData(0), reason, playerName[playerid], name, 8);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `unbanprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], name);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `unbanprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 150, "UPDATE zaidejai SET unbanprizisp = '%i' WHERE vardas = '%e'", unbanprizo_isp, name);
@@ -1595,16 +1641,20 @@ function ispetiadminpriz_off(playerid, name[], reason)
 
 		adminprizo_isp ++;
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], name, 7);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+			GautiData(0), reason, playerName[playerid], name, 7);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `adminprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], name);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `adminprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 150, "UPDATE zaidejai SET adminprizisp = '%i' WHERE vardas = '%e'", adminprizo_isp, name);
+		mysql_format(connectionHandle, query, 150, "UPDATE zaidejai SET adminprizisp = '%i' WHERE vardas = '%e'", \
+			adminprizo_isp, name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 150, "UPDATE admin_priz SET prizisp = '%i' WHERE vardas = '%e'", adminprizo_isp, name);
+		mysql_format(connectionHandle, query, 150, "UPDATE admin_priz SET prizisp = '%i' WHERE vardas = '%e'", \
+			adminprizo_isp, name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		if(adminprizo_isp >= 3)
@@ -1669,16 +1719,20 @@ function ispetivippriz_off(playerid, name[], reason[])
 
 		vipprizo_isp ++;
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], name, 6);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+			GautiData(0), reason, playerName[playerid], name, 6);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `VIPprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], name);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `VIPprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 150, "UPDATE zaidejai SET vipprizisp = '%i' WHERE vardas = '%e'", vipprizo_isp, name);
+		mysql_format(connectionHandle, query, 150, "UPDATE zaidejai SET vipprizisp = '%i' WHERE vardas = '%e'", \
+			vipprizo_isp, name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 150, "UPDATE vip_priz SET prizisp = '%i' WHERE vardas = '%e'", vipprizo_isp, name);
+		mysql_format(connectionHandle, query, 150, "UPDATE vip_priz SET prizisp = '%i' WHERE vardas = '%e'", \
+			vipprizo_isp, name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		if(vipprizo_isp >= 3)
@@ -1735,10 +1789,12 @@ function Ispetidprizaoff(playerid, name[], reason[])
 
 		dprizoisp ++;
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], name, 4);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+			GautiData(0), reason, playerName[playerid], name, 4);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `dprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], name);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `dprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET dprizisp = '%i' WHERE vardas = '%e'", dprizoisp, name);
@@ -1785,7 +1841,8 @@ YCMD:skirtidprizoff(playerid, params[], help)
 		mysql_format(connectionHandle, query, 140, "SELECT dpriziuretojas FROM zaidejai WHERE vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "Skirtidprizaoff", "is", playerid, Vardas);
 
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET dpriziuretojas = '1', dprizisp = '0', dprizpareigosenuo = '%s' WHERE vardas = '%e'", pInfo[id][dprizpareigosenuo], playerName[id]);
+		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET dpriziuretojas = '1', dprizisp = '0', dprizpareigosenuo = '%s' WHERE vardas = '%e'", \
+			pInfo[id][dprizpareigosenuo], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -1833,10 +1890,12 @@ YCMD:aispeti(playerid, params[], help)
 		if(pInfo[id][ADMIN] > 3) return MSG(playerid, RED, "- Negalite áspëti þaidëjo kuris yra LERG komandos narys");
 		pInfo[id][aisp] += 1;
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], playerName[id], 2);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+			GautiData(0), reason, playerName[playerid], playerName[id], 2);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 		
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `AdminISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], playerName[id]);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `AdminISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		if(pInfo[id][aisp] >= 3)
@@ -1860,6 +1919,29 @@ YCMD:aispeti(playerid, params[], help)
 	return 1;
 }
 
+YCMD:nuispvip(playerid, params[], help)
+{
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][vippriz] == 1)
+	{
+		new id, priezastis[31];
+		if(sscanf(params, "us[30]", id, priezastis)) return MSG(playerid, 0x00B8D8AA, "• Nuimti áspëjimà V.I.P nariui: /nuispvip [Dalis vardo/ID][Prieþastis]");
+		if(!IsPlayerConnected(id)) return MSG(playerid, RED, "- Tokio þaidëjo nëra");
+		if(!online[id]) return MSG(playerid, 0xFF0000AA, "- Þaidëjas neprisijungæs!");
+		if(pInfo[id][VIP] == 0) return MSG(playerid, 0xFF0000AA, "- Þaidëjas nëra administratorius!");
+		if(pInfo[id][visp] == 0) return MSG(playerid, RED, "- V.I.P narys neturi áspëjimø!");
+		if(strlen(priezastis) > 30) return MSG(playerid, RED, "- Prieþastis negali bûti ilgesnë negu 30 simboliø");
+
+		SendFormat(playerid, GREEN, "+ Nuëmëte áspëjimà V.I.P nariui %s dël %s", playerName[id], priezastis);
+
+		if(pInfo[playerid][ADMIN] == SAVININKAS){SendFormat(id, GREEN, "• Savininkas %s nuëmë jums V.I.P nario áspëjimà dël %s", playerName[playerid], priezastis);}
+		else if(pInfo[playerid][vippriz] == 1){SendFormat(id, GREEN, "• V.I.p priþiûrëtojas %s nuëmë jums V.I.P nario áspëjimà dël %s", playerName[playerid], priezastis);}
+		
+		pInfo[id][visp]--;
+	}
+	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	return 1;
+}
+
 YCMD:nuispadmin(playerid, params[], help)
 {
 	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][adminpriz] == 1)
@@ -1869,7 +1951,7 @@ YCMD:nuispadmin(playerid, params[], help)
 		if(!IsPlayerConnected(id)) return MSG(playerid, RED, "- Tokio þaidëjo nëra");
 		if(!online[id]) return MSG(playerid, 0xFF0000AA, "- Þaidëjas neprisijungæs!");
 		if(pInfo[id][ADMIN] == 0) return MSG(playerid, 0xFF0000AA, "- Þaidëjas nëra administratorius!");
-		if(pInfo[id][aisp] == 0) return MSG(playerid, RED, "- V.I.P priþiûrëtojas neturi áspëjimø!");
+		if(pInfo[id][aisp] == 0) return MSG(playerid, RED, "- Administratorius neturi áspëjimø!");
 		if(strlen(priezastis) > 30) return MSG(playerid, RED, "- Prieþastis negali bûti ilgesnë negu 30 simboliø");
 
 		SendFormat(playerid, GREEN, "+ Nuëmëte áspëjimà administratoriui %s dël %s", playerName[id], priezastis);
@@ -2017,6 +2099,49 @@ function nuispadminpriz_off(playerid, name[], reason[])
 	return 1;
 }
 
+YCMD:nuispvipoff(playerid, params[], help)
+{
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][vippriz] == 1)
+	{
+		new id, Vardas[MAX_PLAYER_NAME], priezastis[31];
+		if(sscanf(params, "s[24]s[30]", Vardas, priezastis)) return MSG(playerid, 0x00B8D8AA, "• Nuimti áspëjimà atsijungusiam V.I.P nariui: /nuispvipoff [Dalis vardo/ID][Prieþastis]");
+		if(strlen(priezastis) > 30) return MSG(playerid, RED, "- Prieþastis negali bûti ilgesnë nei 30 simboliø");
+
+		id = GetPlayeridMid(Vardas);
+
+		if(id != INVALID_PLAYER_ID) return MSG(playerid, RED, "- Þaidëjas prisijungæs");
+
+		mysql_format(connectionHandle, query, 180, "SELECT vip, visp FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_tquery(connectionHandle, query, "OnNuispAdminOff", "iss", playerid, Vardas, priezastis);
+	}
+	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	return 1;
+}
+
+function OnNuispAdminOff(playerid, name[], reason[])
+{
+	if(cache_num_rows() > 0)
+	{
+		new vip_id, vip_isp;
+		cache_get_value_index_int(0, 0, vip_id);
+		if(vip_id == 0) return MSG(playerid, RED, "- Þaidëjas nëra V.I.P narys");
+		cache_get_value_index_int(0, 1, vip_isp);
+
+		if(vip_isp == 0) return MSG(playerid, RED, "- Þaidëjas neturi V.I.P nario áspëjimø");
+
+		vip_isp--;
+
+		SendFormat(playerid, GREEN, "+ Nuëmëte áspëjimà V.I.P nariui %s, dël %s, dabar jis turi %i áspëjimus(-à)", name, reason, vip_isp);
+
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET visp = '%i' WHERE vardas = '%e'", vip_isp, name);
+		mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+		// Do logs for nuimti ispejima
+	}
+	else return MSG(playerid, RED, "- Tokio þaidëjo duomenø bazëje nëra");
+	return 1;
+}
+
 YCMD:nuispadminoff(playerid, params[], help)
 {
 	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][adminpriz] == 1)
@@ -2150,14 +2275,17 @@ YCMD:ispetivippriz(playerid, params[], help)
 		// 7 adminpriz
 		// 8 unbanpriz
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], playerName[id], 6);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+			GautiData(0), reason, playerName[playerid], playerName[id], 6);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 		
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `VIPprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], playerName[id]);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `VIPprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		
-		mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizisp = '%i' WHERE vardas = '%e'", pInfo[id][vipprizisp], playerName[id]);
+		mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizisp = '%i' WHERE vardas = '%e'", \
+			pInfo[id][vipprizisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", ""); 
 
 
@@ -2175,7 +2303,8 @@ YCMD:ispetivippriz(playerid, params[], help)
 			MSG(id, -1, "{ffd700}• Daugiau informacijos /priezastys");
 			SetPlayerColor(id, DEFAULT_COLOR);
 
-			mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '' WHERE vardas = '%e'", pInfo[id][vipprizpareigosenuo], playerName[id]);
+			mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '' WHERE vardas = '%e'", \
+				pInfo[id][vipprizpareigosenuo], playerName[id]);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET vippriz = '0', vipprizisp = '0', vipprizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
@@ -2218,14 +2347,17 @@ YCMD:ispetiapriz(playerid, params[], help)
 		// 7 adminpriz
 		// 8 unbanpriz
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], playerName[id], 7);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+			GautiData(0), reason, playerName[playerid], playerName[id], 7);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 		
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `adminprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], playerName[id]);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `adminprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		
-		mysql_format(connectionHandle, query, 140, "UPDATE admin_priz SET prizisp = '%i' WHERE vardas = '%e'", pInfo[id][adminprizisp], playerName[id]);
+		mysql_format(connectionHandle, query, 140, "UPDATE admin_priz SET prizisp = '%i' WHERE vardas = '%e'", \
+			pInfo[id][adminprizisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", ""); 
 
 
@@ -2243,7 +2375,8 @@ YCMD:ispetiapriz(playerid, params[], help)
 			MSG(id, -1, "{ffd700}• Daugiau informacijos /priezastys");
 			SetPlayerColor(id, DEFAULT_COLOR);
 
-			mysql_format(connectionHandle, query, 140, "UPDATE admin_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '' WHERE vardas = '%e'", pInfo[id][aprizpareigosenuo], playerName[id]);
+			mysql_format(connectionHandle, query, 140, "UPDATE admin_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '' WHERE vardas = '%e'", \
+				pInfo[id][aprizpareigosenuo], playerName[id]);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET adminpriz = '0', adminprizisp = '0', aprizpareigosenuO = '' WHERE vardas = '%e'", playerName[id]);
@@ -2587,10 +2720,10 @@ YCMD:dkomandos(playerid, params[], help)
 	{
 		new list[1000];
 		strcat(list, "\t{CF9F94}Direktoriaus komandos\n\n{CF9F94}/d{ffffff} - skelbti praneðimà vieðai\n{CF9F94}/nepaememin{ffffff} - nepaëminusiø darbuotojø dienos minimalaus reikalavimo sàraðas");
-		strcat(list, "\n{CF9F94}/atsisakytidrk{ffffff} - atsisakyti direktoriaus pareigø\n{CF9F94}/dvp - direktoriaus valdymo panelë\n{CF9F94}/dpzu{ffffff} - stebëti darbuotojà");
+		strcat(list, "\n{CF9F94}/atsisakytidrk{ffffff} - atsisakyti direktoriaus pareigø\n{CF9F94}/dvp - direktoriaus valdymo panelë\n{CF9F94}/dpzu{ffffff} - stebëti darbuotojà\n{CF9F94}/darboinfo{ffffff} - darbo informacija");
 		ShowPlayerDialog(playerid, drkkomandos, DIALOG_STYLE_MSGBOX, "{ffffff}Direktoriaus komandos", list, "Supratau", "");
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -2612,7 +2745,7 @@ YCMD:akomandos(playerid, params[], help)
 		}
 		Dialog_ShowCallback(playerid, using inline akomandos, DIALOG_STYLE_MSGBOX, "{ffffff}Administratoriø komandos", list, "Supratau", "");
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -2658,7 +2791,7 @@ YCMD:s(playerid, params[], help)
 			else if(pInfo[playerid][ADMIN] == SAVININKAS){SendFormatToAll(-1, "{05c54e}Savininkas {67ab04}%s(%i){05c54e}: {05c54e}%s", playerName[playerid], playerid, msg);}
 		}
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -2961,7 +3094,6 @@ YCMD:medikas(playerid, params[], help)
 	new list[500];	
 	strcat(list, "{CF9F94}Medikø {ffffff}komandos\n\n{CF9F94}/psarvus{ffffff} - parduoti ðarvus\n{CF9F94}pheal{ffffff} - parduoti pagydymà\n{CF9F94}/r{ffffff} - darbo racija");
 	ShowPlayerDialog(playerid, medkomandos, DIALOG_STYLE_MSGBOX, "Policijos komandos", list, "Supratau", "");
-
 	return 1;
 }
 
@@ -3058,6 +3190,83 @@ YCMD:valdzia(playerid, params[], help)
 	return 1;
 }
 
+YCMD:darboinfo(playerid, params[], help)
+{
+	#pragma unused help
+	if(pInfo[playerid][direktorius] > 0)
+	{
+		new zBuffer[500], fBuffer[500], ardirba[30];
+		inline ShowInfoAboutWork(pid, did, resp, litem, string:input[])
+		{
+			#pragma unused pid, did, input, resp, litem
+		}
+		switch(pInfo[playerid][direktorius])
+		{
+			case MEDIKAI:
+			{
+				format(fBuffer, sizeof(fBuffer), "\t{ffffff}Medikø informacija\n\n{496da6}•{ffffff} Minimalus {496da6}praþaidimo{ffffff} reikalavimas: {496da6}%i min\n\n{496da6}•{ffffff} Minimalus {496da6}pagydymø{ffffff} reikalavimas: {496da6}%i{ffffff}",\
+				DarboInfo[MEDIKAI][dienosminimumasMIN], DarboInfo[MEDIKAI][dienosminimumasPAGYD]);
+				strcat(zBuffer, fBuffer);
+
+				format(fBuffer, sizeof(fBuffer), "\n\n{496da6}•{ffffff} Minimalus {496da6}patirties{ffffff} reikalavimas norint ásidarbinti: {496da6}%i{ffffff} XP\n\n{496da6}•{ffffff} Ið viso {496da6}prisijungusiø{ffffff} darbuotojø: {496da6}%i{ffffff}",\
+				MEDIKU_XP, GetWorkersCount(MEDIKAI, true));
+
+				strcat(zBuffer, fBuffer);
+
+				if(DarboInfo[MEDIKAI][dirba]) ardirba = "dirba";
+				else ardirba = "nedirba";
+
+				format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff}Dirba: {496da6}%s", ardirba);
+				strcat(zBuffer, fBuffer);
+
+				if(!DarboInfo[MEDIKAI][dirba]){format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff} Nedirbs iki: {496da6}%s", date(DarboInfo[MEDIKAI][nedirbsiki]));}
+
+
+			}
+			case POLICININKAI:
+			{
+				format(fBuffer, sizeof(fBuffer), "\t{ffffff}Policininkø informacija\n\n{496da6}•{ffffff} Minimalus {496da6}praþaidimo{ffffff} reikalavimas: {496da6}%i{ffffff} min\n\n{496da6}•{ffffff} Minimalus {496da6}baudø{ffffff} reikalavimas: {496da6}%i{ffffff}",\
+				DarboInfo[POLICININKAI][dienosminimumasMIN], DarboInfo[POLICININKAI][dienosminimumasBAUDOS]);
+				strcat(zBuffer, fBuffer);
+
+				format(fBuffer, sizeof(fBuffer), "\n\n{496da6}•{ffffff} Minimalus {496da6}patirties{ffffff} reikalavimas norint ásidarbinti: {496da6}%i{ffffff} XP\n\n{496da6}•{ffffff} Ið viso {496da6}prisijungusiø{ffffff} darbuotojø: {496da6}%i{ffffff}",\
+				POLICININKU_XP, GetWorkersCount(POLICININKAI, true) );
+
+				strcat(zBuffer, fBuffer);
+
+				if(DarboInfo[POLICININKAI][dirba]) ardirba = "dirba";
+				else ardirba = "nedirba";
+
+				format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff}Dirba: {496da6}%s", ardirba);
+				strcat(zBuffer, fBuffer);
+
+				if(!DarboInfo[POLICININKAI][dirba]){format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff} Nedirbs iki: {496da6}%s", date(DarboInfo[POLICININKAI][nedirbsiki]));}
+			}
+			case ARMIJA:
+			{
+				format(fBuffer, sizeof(fBuffer), "\t{ffffff}Policininkø informacija\n\n{496da6}•{ffffff} Minimalus {496da6}praþaidimo{ffffff} reikalavimas: %i min\n\n{496da6}•{ffffff} Minimalus {496da6}baudø{ffffff} reikalavimas: {496da6}%i{ffffff}",\
+				DarboInfo[ARMIJA][dienosminimumasMIN], DarboInfo[ARMIJA][dienosminimumasBAUDOS]);
+				strcat(zBuffer, fBuffer);
+
+				format(fBuffer, sizeof(fBuffer), "\n\n{496da6}•{ffffff} Minimalus {496da6}patirties{ffffff} reikalavimas norint ásidarbinti: {496da6}%i{ffffff} XP\n\n{496da6}•{ffffff} Ið viso {496da6}prisijungusiø{ffffff} darbuotojø: {496da6}%i{ffffff}",\
+				ARMIJOS_XP, GetWorkersCount(ARMIJA, true));
+
+				if(DarboInfo[ARMIJA][dirba]) ardirba = "dirba";
+				else ardirba = "nedirba";
+
+				format(fBuffer, sizeof(fBuffer), "\n\n{496da6}•{ffffff} Dirba: {496da6}%s", ardirba);
+				strcat(zBuffer, fBuffer);
+
+				if(!DarboInfo[ARMIJA][dirba]){format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff} Nedirbs iki: {496da6}%s", date(DarboInfo[ARMIJA][nedirbsiki]));}
+			}
+		}
+
+		Dialog_ShowCallback(playerid, using inline ShowInfoAboutWork, DIALOG_STYLE_MSGBOX, "{ffffff}Jûsø darbo informacija", \
+		zBuffer, "Supratau", "");
+	}
+	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	return 1;
+}
 
 YCMD:direktoriai(playerid, params[], help)
 {
@@ -3172,6 +3381,7 @@ YCMD:dzinute(playerid, params[], help)
 {
 	if(pInfo[playerid][darbas] == 0) return MSG(playerid, RED, "Jûs bedarbis!");
 	if(!DarboInfo[pInfo[playerid][darbas]][arijungta]) return MSG(playerid, RED, "- Darbo þinutë iðjungta");
+	if(isnull(DarboInfo[pInfo[playerid][darbas]][direktoriauszinute])) return MSG(playerid, RED, "- Darbo þinutës nëra");
 
 	ShowPlayerDialog(playerid, drkzinute, DIALOG_STYLE_MSGBOX, "Darbo þinutë", DarboInfo[pInfo[playerid][darbas]][direktoriauszinute], "Supratau", "");
 
@@ -3192,7 +3402,7 @@ YCMD:armija(playerid, params[], help)
 YCMD:dvp(playerid, params[], help)
 {
     if(pInfo[playerid][direktorius] > 0){ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai", "Pasirinkti", "Iðeiti");}
-    else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+    else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
     return 1;
 }
 
@@ -3352,7 +3562,7 @@ YCMD:bausti(playerid, params[], help)
 			}
 		}
  	}
- 	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+ 	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -3373,7 +3583,7 @@ YCMD:ac(playerid, params[], help)
 		if(strlen(msg) > 128) MSG( playerid, 0xFF0000AA, "- Tekstas per ilgas!");
 		SendFormatAdmin(-1, "{f08080}[ADMIN.CHAT] {f4525f}%s(%i){f08080}: {f4525f}%s",playerName[playerid], playerid, msg);
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -3400,7 +3610,7 @@ YCMD:unmute(playerid, params[], help)
 
         SendFormatAdmin(-1, "{f08080} [ADMIN.CHAT] Administratorius {f4525f}%s{f4525f} atitildë þaidëjà {f4525f}%s{f4525f} dël: {f4525f}%s",playerName[playerid], playerName[id], priezastis);
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -3449,7 +3659,7 @@ YCMD:pzu(playerid, params[], help)
             for(new slot=0; slot<12; slot++) ac_GivePlayerWeapon(playerid,pInfo[playerid][spdata][slot],pInfo[playerid][spdata][12+slot]);
 		}
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -3569,6 +3779,7 @@ YCMD:ispetidrk(playerid, params[], help)
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 			pInfo[id][direktorius] = 0;
+			pInfo[id][disp] = 0;
 			pInfo[id][darbas] = 0;
 			pInfo[id][wUniform] = 0;
 			pInfo[id][uniforma] = 0;
@@ -3722,7 +3933,7 @@ function Nuimtidrkaoff(playerid, name[])
 
 		if(direktoriusid == 0) return MSG(playerid, RED, "- Þaidëjas nëra direktorius");
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '0' WHERE vardas = '%e'", name);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '0', disp = '0' WHERE vardas = '%e'", name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		SendFormat(playerid, GREEN, "+ Nuëmëte direktoriø þaidëjui %s", name);
@@ -3838,10 +4049,12 @@ function Ispetidrkaoff(playerid, name[], reason[])
 
 		direkoisp ++;
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", GautiData(0), reason, playerName[playerid], name, 5);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+		GautiData(0), reason, playerName[playerid], name, 5);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `DrkIsp_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], name);
+		mysql_format(connectionHandle, query, 200, "INSERT INTO `DrkIsp_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+			GautiData(0), reason, playerName[playerid], name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET drkisp = '%i' WHERE vardas = '%e'", direkoisp, name);
@@ -3981,7 +4194,7 @@ YCMD:kill(playerid, params[], help)
 		KillTimer(leisgyvistimer[id]);
         
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -3990,7 +4203,7 @@ YCMD:psarvus(playerid, params[], help)
 	new id, Float:cords[3], msg[70];
 	if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Parduoti ðarvus: /psarvus [Dalis vardo/ID]");
 	if(!IsPlayerConnected(id)) return MSG(playerid, 0xFF0000AA, "- Tokio þaidëjo nëra");
-	if(pInfo[playerid][darbas] != MEDIKAI) return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	if(pInfo[playerid][darbas] != MEDIKAI) return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	if(playerid == id) return MSG(playerid, 0xFF0000AA, "- Sau parduoti ðarvø negalite");
 	if(!online[id]) return MSG(playerid, 0xFF0000AA, "- Þaidëjas neprisijungæs");
 	if(pInfo[id][Surakintas]) return MSG(playerid, 0xFF0000AA, "- Þaidëjas surakintas!");
@@ -4104,7 +4317,7 @@ YCMD:get(playerid, params[], help)
 
 		SetCameraBehindPlayer(id);
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 YCMD:to(playerid, params[], help)
@@ -4135,7 +4348,7 @@ YCMD:to(playerid, params[], help)
 
 		SetPlayerVirtualWorld(playerid, GetPlayerVirtualWorld(id));
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4160,7 +4373,7 @@ YCMD:takew(playerid, params[], help)
 			SendFormat(playerid, 0x00B8D8AA, "• Nuginklavote %s(%i)", playerName[id], id);
 		}
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4181,7 +4394,7 @@ YCMD:uzsaldyti(playerid, params[], help)
 		SendFormatAdmin(GREEN, "• Administratorius %s(%i) uþðaldë %s(%i)", playerName[playerid], playerid, playerName[id], id);
 		TogglePlayerControllable(id, false);
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4201,7 +4414,7 @@ YCMD:atsaldyti(playerid, params[], help)
 		SendFormatAdmin(GREEN, "• Administratorius %s(%i) atðaldë %s(%i)", playerName[playerid], playerid, playerName[id], id);
 		TogglePlayerControllable(id, true);
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4224,7 +4437,7 @@ YCMD:sc(playerid, params[], help)
 		if(strlen(msg) > 128) MSG( playerid, 0xFF0000AA, "- Tekstas per ilgas!");
 		SendFormatSav(-1, "{f08080}[SAVININKØ.CHAT] {f4525f}%s(%i){f08080}: {f4525f}%s",playerName[playerid], playerid, msg);
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4242,7 +4455,7 @@ YCMD:skirtivip(playerid, params[], help)
 
 		SendFormat(playerid, -1, "{21e136}+ Paskyrëte {1fbf79}%s{21e136} VIP nariu",playerName[id]);
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4265,10 +4478,12 @@ YCMD:skirtivippriz(playerid, params[], help)
 		format(VIPPRIZINFO[prizvardas], 24, "%s", playerName[id]);
 		format(VIPPRIZINFO[prizpareigosenuo], 24, "%s", GautiData(0));
 
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET vippriz = '1', vipprizisp = '0', vipprizpareigosenuo = '%s' WHERE vardas = '%e'", pInfo[id][vipprizpareigosenuo], playerName[id]);
+		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET vippriz = '1', vipprizisp = '0', vipprizpareigosenuo = '%s' WHERE vardas = '%e'", \
+			pInfo[id][vipprizpareigosenuo], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '%e'", pInfo[id][vipprizpareigosenuo], playerName[id]);
+		mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '%e'", \
+			pInfo[id][vipprizpareigosenuo], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -4616,7 +4831,7 @@ YCMD:skirtivipoff(playerid, params[], help)
 	if(pInfo[playerid][ADMIN] == SAVININKAS)
 	{
 		new id, Vardas[MAX_PLAYER_NAME];
-		if(sscanf(params, "s[24]", Vardas)) return MSG(playerid, 0x00B8D8AA, "• Skirti V.I.P nariu (OFFLINE): /skirtivipoff [Vardas_Pavarde]");
+		if(sscanf(params, "s[24]", Vardas)) return MSG(playerid, 0x00B8D8AA, "• Skirti V.I.P nariu (OFFLINE): /skvipoff [Vardas_Pavarde]");
 
 		id = GetPlayeridMid(Vardas);
 
@@ -4624,13 +4839,13 @@ YCMD:skirtivipoff(playerid, params[], help)
 		if(!IsValidNickName(Vardas)) return MSG(playerid, RED, "- Netinkama vardo forma. Tinkama vardo forma: Vardas_Pavarde");
 
 		mysql_format(connectionHandle, query, 140, "SELECT vip FROM zaidejai WHERE vardas = '%e'", Vardas);
-		mysql_tquery(connectionHandle, query, "skirtivipu_off", "is", playerid, Vardas);
+		mysql_tquery(connectionHandle, query, "onSkirtiVIPOFF", "is", playerid, Vardas);
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
 	return 1;
 }
 
-function skirtivipu_off(playerid, name[])
+function onSkirtiVIPOFF(playerid, name[])
 {
 	if(cache_num_rows() > 0)
 	{
@@ -4645,6 +4860,164 @@ function skirtivipu_off(playerid, name[])
 		SendFormat(playerid, GREEN, "+ Paskyrëte þaidëjà %s V.I.P nariu 30(-iai) dienø", name);
 	}
 	else return MSG(playerid, RED, "- Tokio þaidëjo duomenø bazëje nëra");
+	return 1;
+}
+
+YCMD:skirtidrkoff(playerid, params[], help)
+{
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][dpriziuretojas] == 1)
+	{
+		new Vardas[MAX_PLAYER_NAME], id;
+		if(sscanf(params, "s[24]", Vardas)) return MSG(playerid, 0x00B8D8AA, "• Skirti direktoriumi (OFFLINE): /skirtidrkoff [Vardas_Pavardë]");
+		if(!IsValidNickName(Vardas)) return MSG(playerid, RED, "- Neteisinga vardo forma. Turi atrodyti taip: Vardas_Pavardë");
+
+		id = GetPlayeridMid(Vardas);
+
+		if(id != INVALID_PLAYER_ID) return MSG(playerid, 0xFF0000AA, "- Þaidëjas prisijungæs!");
+
+		mysql_format(connectionHandle, query, 140, "SELECT direktorius FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_tquery(connectionHandle, query, "onSkirtiDRKOff", "is", playerid, Vardas);
+	}
+	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	return 1;
+}
+
+function onSkirtiDRKOff(playerid, name[])
+{
+	if(cache_num_rows() > 0)
+	{
+		new direktoriaus_id;
+		cache_get_value_index_int(0, 0, direktoriaus_id);
+
+		if(direktoriaus_id > 0) return MSG(playerid, RED, "- Þaidëjas jau yra direktorius");
+
+		format(pInfo[playerid][PasirinktasZaidejasOFF], 24, "%s", name);
+		inline skirtidireku_off(pid, did, resp, litem, string:input[])
+		{
+			#pragma unused pid, did, input
+			if(resp)
+			{
+				switch(litem)
+				{
+					case 0:
+					{
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '1', drkpareigosenuo = '%s', disp = '0' WHERE vardas = '%e'", GautiData(0), pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+						mysql_format(connectionHandle, query, 140, "UPDATE darbai SET drk = '%e', drkpareigosenuo = '%s', drkisp = '0' WHERE jobID = '%i'", pInfo[playerid][PasirinktasZaidejasOFF], GautiData(0), 1);
+						mysql_tquery(connectionHandle, query, "SendQuery");
+
+						SendFormat(playerid, GREEN, "+ Paskyrëte %s medikø direktoriumi!", pInfo[playerid][PasirinktasZaidejasOFF]);
+					}
+					case 1:
+					{
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '2', drkpareigosenuo = '%s', disp = '0' WHERE vardas = '%e'", GautiData(0), pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+						mysql_format(connectionHandle, query, 140, "UPDATE darbai SET drk = '%e', drkpareigosenuo = '%s', drkisp = '0' WHERE jobID = '%i'", pInfo[playerid][PasirinktasZaidejasOFF], GautiData(0), 2);
+						mysql_tquery(connectionHandle, query, "SendQuery");
+
+						SendFormat(playerid, GREEN, "+ Paskyrëte %s policijos generaliniu komisaru!", pInfo[playerid][PasirinktasZaidejasOFF]);
+					}
+					case 2:
+					{
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '3', drkpareigosenuo = '%s', disp = '0' WHERE vardas = '%e'", GautiData(0), pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+						mysql_format(connectionHandle, query, 140, "UPDATE darbai SET drk = '%e', drkpareigosenuo = '%s', drkisp = '0' WHERE jobID = '%i'", pInfo[playerid][PasirinktasZaidejasOFF], GautiData(0), 3);
+						mysql_tquery(connectionHandle, query, "SendQuery");
+
+						SendFormat(playerid, GREEN, "+ Paskyrëte %s armijos generolu!", pInfo[playerid][PasirinktasZaidejasOFF]);
+					}
+				}
+			}
+		}
+		new buffer[100];
+		format(buffer, sizeof(buffer), "» Þaidëjo %s paskyrimas direktoriumi", pInfo[playerid][PasirinktasZaidejasOFF]);
+		Dialog_ShowCallback(playerid, using inline skirtidireku_off, DIALOG_STYLE_LIST, buffer, "{DB9999}•{ffffff} Medikø\n{DB9999}•{ffffff} Policijos\n{DB9999}•{ffffff} Armijos", "Paskirti", "Iðeiti");
+	}
+	else return MSG(playerid, RED, "- Tokio þaidëjo duomenø bazëje nëra");
+	return 1;
+}
+
+YCMD:skirtiadminoff(playerid, params[], help)
+{
+	if(pInfo[playerid][ADMIN] == SAVININKAS)
+	{
+		new Vardas[MAX_PLAYER_NAME], id;
+		if(sscanf(params, "s[24]", Vardas)) return MSG(playerid, 0x00B8D8AA, "• Skirti administratoriumi (OFFLINE): /skirtiadminoff [Vardas_Pavardë]");
+		if(!IsValidNickName(Vardas)) return MSG(playerid, RED, "- Neteisinga vardo forma. Turi atrodyti taip: Vardas_Pavardë");
+
+		id = GetPlayeridMid(Vardas);
+
+		if(id != INVALID_PLAYER_ID) return MSG(playerid, 0xFF0000AA, "- Þaidëjas prisijungæs!");
+
+		mysql_format(connectionHandle, query, 140, "SELECT admin FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_tquery(connectionHandle, query, "onSkirtiAdminuOff", "is", playerid, Vardas);
+	}
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
+	return 1;
+}
+
+function onSkirtiAdminuOff(playerid, name[])
+{
+	if(cache_num_rows() > 0)
+	{
+		new admino_id;
+		cache_get_value_index_int(0, 0, admino_id);
+		if(admino_id > 0) return MSG(playerid, RED, "- Þaidëjas jau yra administratorius");
+		
+		format(pInfo[playerid][PasirinktasZaidejasOFF], 24, "%s", name);
+
+		inline skirtiadminu_off(pid, did, resp, litem, string:input[])
+		{
+			#pragma unused pid, did, input
+			if(resp)
+			{
+				switch(litem)
+				{
+					case 0:
+					{	
+						SendFormat(playerid, GREEN, "+ Paskyrëte %s á I lvl administratoriaus pareigas 30-èiai dienø", pInfo[playerid][PasirinktasZaidejasOFF]);
+
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET admin = '1', AdminLaikas = '%i' WHERE vardas = '%e'", \
+							gettime() + thirtyDays, pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
+					}	
+					case 1:
+					{
+						SendFormat(playerid, GREEN, "+ Paskyrëte %s á II lvl administratoriaus pareigas 30-èiai dienø", pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET admin = '2', AdminLaikas = '%i' WHERE vardas = '%e'", \
+							gettime() + thirtyDays, pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
+					}
+					case 2:
+					{
+						SendFormat(playerid, GREEN, "+ Paskyrëte %s á III lvl administratoriaus pareigas 30-èiai dienø", pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET admin = '3', AdminLaikas = '%i' WHERE vardas = '%e'", \
+							gettime() + thirtyDays, pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
+					}
+					case 3:
+					{
+						SendFormat(playerid, GREEN, "+ Paskyrëte %s komandos nariu", pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET admin = '4', AdminLaikas = '%i' WHERE vardas = '%e'", \
+							gettime() + thirtyDays, pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
+					}
+					case 4:
+					{
+						SendFormat(playerid, GREEN, "+ Paskyrëte %s savininku", pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET admin = '5', AdminLaikas = '%i' WHERE vardas = '%e'", \
+							gettime() + thirtyDays, pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
+					}
+				}
+			}
+		}
+		Dialog_ShowCallback(playerid, using inline skirtiadminu_off, DIALOG_STYLE_LIST, "{ffffff}Paskyrimas á ADMIN", "I lvl\nII lvl\nIII lvl\nKomandos narys\nIV lvl", "Paskirti", "Iðeiti");
+	}
+	else return MSG(playerid, RED, "Tokio þaidëjo duomenø bazëje nëra");
 	return 1;
 }
 
@@ -4703,7 +5076,7 @@ YCMD:skirtiadmin(playerid, params[], help)
 		}
 		Dialog_ShowCallback(playerid, using inline skirtiadminu, DIALOG_STYLE_LIST, "{ffffff}Þaidëjo paskyrimas á administratoriaus pareigas", "Pasirinkite kelinto lygio administratoriumi norite paskirti þaidëjà\n\nI lygio\nII lygio\nIII lygio\nSavininkas", "Skirti", "Iðeiti");
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4782,7 +5155,7 @@ YCMD:perkrautiserveri(playerid, params[], help)
 		SendClientMessageToAll(-1, "{813281}[SERVERIS]{ffffff} Numatomas {813281}serverio{ffffff} perkrovimas");
 		SendFormatToAll(-1, "{813281}[SERVERIS]{ffffff} Serveris bus perkrautas po {813281}%i{ffffff} sekundþiø, skaièiuojamas laikas", ServerRestartTime);
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4815,7 +5188,7 @@ YCMD:atblokuoti(playerid, params[], help)
 		mysql_format(connectionHandle, query, 140, "SELECT Vardas FROM banlist WHERE Vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "OnAtblokuotiZaideja", "is", playerid, Vardas);
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4841,7 +5214,7 @@ YCMD:atblokuoti_ip(playerid, params[], help)
 		mysql_format(connectionHandle, query, 140, "SELECT IP FROM banlist WHERE IP = '%s'", IP);
 		mysql_tquery(connectionHandle, query, "OnAtblokuotiZaidejaIP", "is", playerid, IP);
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4874,7 +5247,7 @@ YCMD:skomandos(playerid, params[], help)
 
 		ShowPlayerDialog(playerid, savkomandos, DIALOG_STYLE_MSGBOX, "Savininkø komandos", list, "2 psl", "");
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4908,7 +5281,7 @@ YCMD:mute(playerid, params[], help)
 			SendClientMessageToAll(-1, "{75B244}••• {FFFFFF}Laikas: {33B7D3}Visam!");
 		}
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4920,10 +5293,10 @@ YCMD:vprizkomandos(playerid, params[], help)
 	{
 		new list[1000];
 		strcat(list, "\t{CF9F94}V.I.P priþiûrëtojaus komandos\n\n{CF9F94}/vispeti{ffffff} - Áspëti V.I.P nará\n{CF9F94}/pskelbti{ffffff} - skelbti praneðimà\n{CF9F94}/atsisakytivpriz{ffffff} - atsisakyti V.I.P nariø priþiûrëtojaus");
-		strcat(list, "\n{CF9F94}/vispetioff{ffffff} - áspëti atsijungusá V.i.P nará");
+		strcat(list, "\n{CF9F94}/vispetioff{ffffff} - áspëti atsijungusá V.I.P nará\n{CF9F94}/nuispvip{ffffff} - nuimti áspëjimà V.I.P nariui\n{CF9F94}/nuispvipoff{ffffff} - nuimti áspëjimà atsijungusiam V.I.P nariui");
 		ShowPlayerDialog(playerid, vipprizkomandos, DIALOG_STYLE_MSGBOX, "{ffffff}V.I.P priþiûrëtojaus komandos", list, "Supratau", "");
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4938,7 +5311,7 @@ YCMD:aprizkomandos(playerid, params[], help)
 		strcat(list, "\n{CF9F94}/atsisakytiadminpriz{ffffff} - atsisakyti administratoriø priþiûrëtojaus pareigø\n{CF9F94}/aispetioff{ffffff} - áspëti atsijungusá administratoriø");
 		ShowPlayerDialog(playerid, aprizkomandos, DIALOG_STYLE_MSGBOX, "{ffffff}Admin priþiûrëtojaus komandos", list, "Supratau", "");
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4951,7 +5324,7 @@ YCMD:unbanprizkomandos(playerid, params[], help)
 		strcat(list, "\t{CF9F94}UNBAN priþiûrëtojaus komandos\n\n{CF9F94}/atsisakytiunbanpriz{ffffff} - atsisakyti UNBAN priþiûrëtojaus pareigø");
 		strcat(list, "\n{CF9F94}/atblokuoti - atblokuoti þaidëjà");
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4967,7 +5340,7 @@ YCMD:dprizkomandos(playerid, params[], help)
 		strcat(list, "\n{CF9F94}/skirtidrkoff{ffffff} - skirti atsijungusá þaidëjà direktoriumi");
 		ShowPlayerDialog(playerid, dprizkomandos, DIALOG_STYLE_MSGBOX, "{ffffff}Direktoriø priþiûrëtojaus komandos", list, "Supratau", "");
 	}
-	else return MSG(playerid, -1, "{CC0000}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
 }
 
@@ -4999,6 +5372,7 @@ YCMD:skirtidrk(playerid, params[], help)
 
 						format(DarboInfo[MEDIKAI][drk], 24, "%s", playerName[id]);
 						format(DarboInfo[MEDIKAI][drkpareigosenuo], 31, "%s", GautiData(0));
+						format(pInfo[id][direkopareigosenuo], 31, "%s", GautiData(0));
 
 						SendFormat(playerid, GREEN, "+ Paskyrëte %s(%i) medikø direktoriumi", playerName[id], id);
 
@@ -5006,6 +5380,10 @@ YCMD:skirtidrk(playerid, params[], help)
 
 						mysql_format(connectionHandle, query, 180, "UPDATE darbai SET drkpareigosenuo = '%s', drk = '%s' WHERE jobID = '%i'", GautiData(0), playerName[id], pInfo[id][direktorius]);
 						mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET drkpareigosenuo = '%s' WHERE vardas = '%e'", pInfo[id][direkopareigosenuo], playerName[id]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
+
 					}
 					case 1:
 					{
@@ -5016,12 +5394,17 @@ YCMD:skirtidrk(playerid, params[], help)
 
 						format(DarboInfo[POLICININKAI][drk], 24, "%s", playerName[id]);
 						format(DarboInfo[POLICININKAI][drkpareigosenuo], 31, "%s", GautiData(0));
+						format(pInfo[id][direkopareigosenuo], 31, "%s", GautiData(0));
 
 						SendFormat(playerid, GREEN, "+ Paskyrëte %s(%i) policijos generaliniu komisaru", playerName[id], id);
 
 						SendFormat(id, GREEN, "» Direktoriø priþiûrëtojas %s(%i) paskyrë jus policijos generaliniu komisaru", playerName[playerid], playerid);
 
-						mysql_format(connectionHandle, query, 180, "UPDATE darbai SET drkpareigosenuo = '%s', drk = '%s' WHERE jobID = '%i'", GautiData(0), playerName[id], pInfo[id][direktorius]);
+						mysql_format(connectionHandle, query, 180, "UPDATE darbai SET drkpareigosenuo = '%s', drk = '%s' WHERE jobID = '%i'", \
+							GautiData(0), playerName[id], pInfo[id][direktorius]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
+					
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET drkpareigosenuo = '%s' WHERE vardas = '%e'", pInfo[id][direkopareigosenuo], playerName[id]);
 						mysql_tquery(connectionHandle, query, "SendQuery", "");
 					}
 					case 2:
@@ -5033,12 +5416,18 @@ YCMD:skirtidrk(playerid, params[], help)
 
 						format(DarboInfo[ARMIJA][drk], 24, "%s", playerName[id]);
 						format(DarboInfo[ARMIJA][drkpareigosenuo], 31, "%s", GautiData(0));
+						format(pInfo[id][direkopareigosenuo], 31, "%s", GautiData(0));
 
 						SendFormat(playerid, GREEN, "+ Paskyrëte %s(%i) armijos generolu", playerName[id], id);
 
 						SendFormat(id, GREEN, "» Direktoriø priþiûrëtojas %s(%i) paskyrë jus armijos generolu", playerName[playerid], playerid);
 
-						mysql_format(connectionHandle, query, 180, "UPDATE darbai SET drkpareigosenuo = '%s', drk = '%s' WHERE jobID = '%i'", GautiData(0), playerName[id], pInfo[id][direktorius]);
+						mysql_format(connectionHandle, query, 180, "UPDATE darbai SET drkpareigosenuo = '%s', drk = '%s' WHERE jobID = '%i'", \
+							GautiData(0), playerName[id], pInfo[id][direktorius]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
+						
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET drkpareigosenuo = '%s' WHERE vardas = '%e'", \
+							pInfo[id][direkopareigosenuo], playerName[id]);
 						mysql_tquery(connectionHandle, query, "SendQuery", "");
 					}
 				}
@@ -5766,7 +6155,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			new list[1000];
 			strcat(list, "\n{CF9F94}/skirtivipoff{ffffff} - paskirti atsijungusá þaidëjà V.I.P nariu\n{CF9F94}/skirtiadminoff{ffffff} - paskirti atsijungusá þaidëjà administratoriumi");
 			strcat(list, "\n{CF9F94}/nuispunbanpriz{ffffff} - nuimti áspëjimà UNBAN priþiûrëtojui\n{CF9F94}/nuispunbanprizoff{ffffff} - nuimti áspëjimà atsijungusiam UNBAN priþiûrëtojui");
-			strcat(list, "\n{CF9F94}/rlogas{ffffff} - racijos logai");
+			strcat(list, "\n{CF9F94}/rlogas{ffffff} - racijos logai\n{CF9F94}/nuispvip{ffffff} - nuimti áspëjimà V.I.P nariui\n{CF9F94}/nuispvipoff{ffffff} - nuimti áspëjimà atsijungusiam V.I.P nariui");
+			strcat(list, "\n");
 			ShowPlayerDialog(playerid, savkomandos3, DIALOG_STYLE_MSGBOX, "{ffffff}Savininkø komandos | 4psl", list, "Supratau", "");
 		}
 		return 1;
@@ -6171,7 +6561,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							}
 							else
 							{
-								mysql_format(connectionHandle, query, 200, "SELECT disp FROM zaidejai WHERE vardas = '%e'",DarbuotojuVardai[pInfo[playerid][direktorius]][pInfo[playerid][ziuridarbuotoja]]);
+								mysql_format(connectionHandle, query, 200, "SELECT disp FROM zaidejai WHERE vardas = '%e'",\
+									DarbuotojuVardai[pInfo[playerid][direktorius]][pInfo[playerid][ziuridarbuotoja]]);
 								mysql_tquery(connectionHandle, query, "OndirektoriusWarnOfflinePlayer", "is", playerid, input);
 							}
 						}
@@ -6275,7 +6666,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			}
 			if(pInfo[id][darbas] != 0) return MSG(playerid, 0xFF0000AA, "- Þaidëjas jau turi darbà");
     		if(pInfo[id][Invited] != 0) return MSG(playerid, 0xFF0000AA, "- Þaidëjas jau yra pakviestas á ðá ar kità darbà!");
-    		//if(pInfo[id][medpazyma] == 0) return SendClientMessage(playerid, 0xFF0000AA, "- Þaidëjas neturi galiojanèios sveikatos paþymos");
+    		if(!pInfo[id][sveikatpaz]) return MSG(playerid, 0xFF0000AA, "- Þaidëjas neturi galiojanèios sveikatos paþymos");
 	    	if(GetPlayerScore(playerid) < xpKiekis) return MSG(playerid, 0xFF0000AA, "- Þaidëjas neturi pakankamai patirties!");
 
     		format(string, sizeof(string), "{74C487}•{ffffff} Pakvietëte {74C487}%s{ffffff} dirbti {74C487}%s", playerName[id], darbotipas);
@@ -7833,6 +8224,13 @@ function Game()
 				else if(pInfo[p][VIP] == 0 && pInfo[p][ADMIN] == 0) PlusPlayerScore(p, randomEx(1,3));// JEI NEI VIP NEI ADMIN
 			}
 			GetPlayerPos(p, pInfo[p][AntiAFK][0], pInfo[p][AntiAFK][1], pInfo[p][AntiAFK][2]);
+
+			switch(pInfo[p][darbas])
+			{
+				case MEDIKAI:{pInfo[p][zaidejoMedikuXP] += randomEx(1, 5);}
+				case POLICININKAI:{pInfo[p][zaidejoPolicijosXP] += randomEx(1, 5);}
+				case ARMIJA:{pInfo[p][zaidejoArmijosXP] += randomEx(1, 5);}
+			}
 		}	
 	}
 
@@ -8028,6 +8426,24 @@ stock ConvertSeconds(sekundes) // by Johurt
 
 
 //
+
+function OnPlayerJobXPLoad(playerid)
+{
+	if(cache_num_rows() > 0)
+	{
+		cache_get_value_index_int(0, 0, pInfo[playerid][zaidejoMedikuXP]);
+		cache_get_value_index_int(0, 1, pInfo[playerid][zaidejoPolicijosXP]);
+		cache_get_value_index_int(0, 2, pInfo[playerid][zaidejoArmijosXP]);
+	}
+	else
+	{
+		mysql_format(connectionHandle, query, 144, "INSERT INTO `darbaiSuPakvietimais_xp` (`Vardas`, `MedikoXP`, `PolicininkoXP`, `ArmijosXP`) VALUES ('%e', '%i', '%i', '%i')", \
+		playerName[playerid], pInfo[playerid][zaidejoMedikuXP], pInfo[playerid][zaidejoPolicijosXP], pInfo[playerid][zaidejoArmijosXP]);
+		mysql_tquery(connectionHandle, query, "SendQuery", "");
+	}
+	return 1;
+}
+
 
 function OnPlayerDataCheck(playerid, corrupt_check)
 {
@@ -8413,6 +8829,8 @@ function _LOAD(playerid)
 
 	cache_get_value_name(0, "aprizpareigosenuo", pInfo[playerid][aprizpareigosenuo]);
 
+	cache_get_value_name(0, "drkpareigosenuo", pInfo[playerid][direkopareigosenuo]);
+
 	cache_get_value_name(0, "vipprizpareigosenuo", pInfo[playerid][vipprizpareigosenuo]);
 
 	cache_get_value_name(0, "unbanprizpareigosenuo", pInfo[playerid][unbanprizpareigosenuo]);
@@ -8444,6 +8862,7 @@ function _LOAD(playerid)
 	cache_get_value_int(0, "perma_mute", pInfo[playerid][permamute]);
 
     cache_get_value_int(0, "mutelaikas", pInfo[playerid][Muted]);
+
     if(pInfo[playerid][Muted] > 0 || pInfo[playerid][permamute] == 1) MuteTime[playerid] = SetTimerEx("Mute", 1000, true, "i",playerid);
 
 	if(pInfo[playerid][wUniform] > 0)
@@ -8551,36 +8970,50 @@ function _SAVE(playerid)
 	GetPlayerHealth(playerid, HP);
 	GetPlayerArmour(playerid, Armour);
 
-	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `pinigai` = '%i', `patirtis` = '%i', `x` = '%f', `y` = '%f', `z` = '%f', `facing` = '%f', `hp` = '%f', `armour` = '%f', `admin` = '%i', `AdminLaikas` = '%i', `mutelaikas` = '%i' WHERE `vardas` = '%e' LIMIT 1;", pInfo[playerid][pinigai], GetPlayerScore(playerid), cords[0], cords[1], cords[2], cords[3], HP, Armour, pInfo[playerid][ADMIN], pInfo[playerid][AdminLaikas], pInfo[playerid][Muted], playerName[playerid]);
+	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `pinigai` = '%i', `patirtis` = '%i', `x` = '%f', `y` = '%f', `z` = '%f', `facing` = '%f', `hp` = '%f', `armour` = '%f', `admin` = '%i', `AdminLaikas` = '%i', `mutelaikas` = '%i' WHERE `vardas` = '%e' LIMIT 1;", \
+		pInfo[playerid][pinigai], GetPlayerScore(playerid), cords[0], cords[1], cords[2], cords[3], HP, Armour, pInfo[playerid][ADMIN], pInfo[playerid][AdminLaikas], pInfo[playerid][Muted], playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
     for (new tmp=0; tmp<12; tmp++) GetPlayerWeaponData(playerid,tmp,weps[0][tmp],weps[1][tmp]);
 	
-	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `Ginklas0` = '%d', `Ginklas1` = '%d', `Ginklas2` = '%d', `Ginklas3` = '%d', `Ginklas4` = '%d', `Ginklas5` = '%d', `Ginklas6` = '%d', `Ginklas7` = '%d', `Ginklas8` = '%d', `Ginklas9` = '%d', `Ginklas10` = '%d', `Ginklas11` = '%d' WHERE `vardas` = '%e' LIMIT 1;",weps[0][0],weps[0][1],weps[0][2],weps[0][3],weps[0][4],weps[0][5],weps[0][6],weps[0][7],weps[0][8],weps[0][9],weps[0][10],weps[0][11],playerName[playerid]);
+	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `Ginklas0` = '%d', `Ginklas1` = '%d', `Ginklas2` = '%d', `Ginklas3` = '%d', `Ginklas4` = '%d', `Ginklas5` = '%d', `Ginklas6` = '%d', `Ginklas7` = '%d', `Ginklas8` = '%d', `Ginklas9` = '%d', `Ginklas10` = '%d', `Ginklas11` = '%d' WHERE `vardas` = '%e' LIMIT 1;", \
+		weps[0][0],weps[0][1],weps[0][2],weps[0][3],weps[0][4],weps[0][5],weps[0][6],weps[0][7],weps[0][8],weps[0][9],weps[0][10],weps[0][11],playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `Ammo0` = '%d', `Ammo1` = '%d', `Ammo2` = '%d', `Ammo3` = '%d', `Ammo4` = '%d', `Ammo5` = '%d', `Ammo6` = '%d', `Ammo7` = '%d', `Ammo8` = '%d', `Ammo9` = '%d', `Ammo10` = '%d', `Ammo11` = '%d', `Interior` = '%i' WHERE `vardas` = '%e' LIMIT 1;", weps[1][0],weps[1][1],weps[1][2],weps[1][3],weps[1][4], weps[1][5],weps[1][6],weps[1][7],weps[1][8],weps[1][9], weps[1][10],weps[1][11],GetPlayerInterior(playerid),playerName[playerid]);
+	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `Ammo0` = '%d', `Ammo1` = '%d', `Ammo2` = '%d', `Ammo3` = '%d', `Ammo4` = '%d', `Ammo5` = '%d', `Ammo6` = '%d', `Ammo7` = '%d', `Ammo8` = '%d', `Ammo9` = '%d', `Ammo10` = '%d', `Ammo11` = '%d', `Interior` = '%i' WHERE `vardas` = '%e' LIMIT 1;", \
+		weps[1][0],weps[1][1],weps[1][2],weps[1][3],weps[1][4], weps[1][5],weps[1][6],weps[1][7],weps[1][8],weps[1][9], weps[1][10],weps[1][11],GetPlayerInterior(playerid),playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `vip` = '%i', `VipLaikas` = '%i', `darbas` = '%i', `isidarbino` = '%s', `direktorius` = '%i' WHERE `vardas` = '%e' LIMIT 1;",pInfo[playerid][VIP], pInfo[playerid][VipLaikas], pInfo[playerid][darbas], pInfo[playerid][workingSince], pInfo[playerid][direktorius],playerName[playerid]);
+	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `vip` = '%i', `VipLaikas` = '%i', `darbas` = '%i', `isidarbino` = '%s', `direktorius` = '%i' WHERE `vardas` = '%e' LIMIT 1;", \
+		pInfo[playerid][VIP], pInfo[playerid][VipLaikas], pInfo[playerid][darbas], pInfo[playerid][workingSince], pInfo[playerid][direktorius],playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `uniforma` = '%i', `wUniform` = '%i', `wantedlevel` = '%i', `gender` = '%i', `glic` = '%i' WHERE `vardas` = '%e' LIMIT 1;",pInfo[playerid][uniforma], pInfo[playerid][wUniform], pInfo[playerid][gaudomumas], pInfo[playerid][lytis], pInfo[playerid][glic],playerName[playerid]);
+	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `uniforma` = '%i', `wUniform` = '%i', `wantedlevel` = '%i', `gender` = '%i', `glic` = '%i' WHERE `vardas` = '%e' LIMIT 1;", \
+		pInfo[playerid][uniforma], pInfo[playerid][wUniform], pInfo[playerid][gaudomumas], pInfo[playerid][lytis], pInfo[playerid][glic],playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `pavaduotojas` = '%i', `aisp` = '%i', `disp` = '%i', `visp` = '%i', `siandienprazaide` = '%i', `siandienpradirbo` = '%i', `dpriziuretojas` = '%i' WHERE `vardas` = '%e' LIMIT 1;", pInfo[playerid][pavaduotojas], pInfo[playerid][aisp], pInfo[playerid][disp], pInfo[playerid][visp], pInfo[playerid][siandienprazaide], pInfo[playerid][siandienpradirbo], pInfo[playerid][dpriziuretojas], playerName[playerid]);
+	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `pavaduotojas` = '%i', `aisp` = '%i', `disp` = '%i', `visp` = '%i', `siandienprazaide` = '%i', `siandienpradirbo` = '%i', `dpriziuretojas` = '%i' WHERE `vardas` = '%e' LIMIT 1;", \
+		pInfo[playerid][pavaduotojas], pInfo[playerid][aisp], pInfo[playerid][disp], pInfo[playerid][visp], pInfo[playerid][siandienprazaide], pInfo[playerid][siandienpradirbo], pInfo[playerid][dpriziuretojas], playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-	mysql_format(connectionHandle, query, 300, "UPDATE zaidejai SET `lastloginDATE` = '%s', `lastloginIP` = '%s', `laikoligonineje` = '%i', `pagydymai` = '%i', `baudos` = '%i', `sveikatospazyma` = '%i', `sveikatospazymoslaikas` = '%i' WHERE vardas = '%e' LIMIT 1;", GautiData(0), IPAS[playerid], pInfo[playerid][LaikoLigoninej], pInfo[playerid][pagydymai], pInfo[playerid][baudos], pInfo[playerid][sveikatpaz], pInfo[playerid][sveikatpazlaikas], playerName[playerid]);
+	mysql_format(connectionHandle, query, 300, "UPDATE zaidejai SET `lastloginDATE` = '%s', `lastloginIP` = '%s', `laikoligonineje` = '%i', `pagydymai` = '%i', `baudos` = '%i', `sveikatospazyma` = '%i', `sveikatospazymoslaikas` = '%i' WHERE vardas = '%e' LIMIT 1;", \
+		GautiData(0), IPAS[playerid], pInfo[playerid][LaikoLigoninej], pInfo[playerid][pagydymai], pInfo[playerid][baudos], pInfo[playerid][sveikatpaz], pInfo[playerid][sveikatpazlaikas], playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-	mysql_format(connectionHandle, query, 300, "UPDATE zaidejai SET `adminpriz` = '%i', `vippriz` = '%i', `direktoriaus_ispejimai` = '%i' WHERE vardas = '%e' LIMIT 1;", pInfo[playerid][adminpriz], pInfo[playerid][vippriz], pInfo[playerid][drkisp], playerName[playerid]);
+	mysql_format(connectionHandle, query, 300, "UPDATE zaidejai SET `adminpriz` = '%i', `vippriz` = '%i', `direktoriaus_ispejimai` = '%i' WHERE vardas = '%e' LIMIT 1;", \
+		pInfo[playerid][adminpriz], pInfo[playerid][vippriz], pInfo[playerid][drkisp], playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-	mysql_format(connectionHandle, query, 300, "UPDATE zaidejai SET `vipprizisp` = '%i', `adminprizisp` = '%i', `dprizisp` = '%i' WHERE vardas = '%e' LIMIT 1;", pInfo[playerid][vipprizisp], pInfo[playerid][adminprizisp], pInfo[playerid][dprizisp], playerName[playerid]);
+	mysql_format(connectionHandle, query, 300, "UPDATE zaidejai SET `vipprizisp` = '%i', `adminprizisp` = '%i', `dprizisp` = '%i' WHERE vardas = '%e' LIMIT 1;", \
+		pInfo[playerid][vipprizisp], pInfo[playerid][adminprizisp], pInfo[playerid][dprizisp], playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-	mysql_format(connectionHandle, query, 300, "UPDATE zaidejai SET `unbanpriziuretojas` = '%i', `unbanprizisp` = '%i', `perma_mute` = '%i' WHERE vardas = '%e' LIMIT 1;", pInfo[playerid][unbanpriziuretojas], pInfo[playerid][unbanprizisp], pInfo[playerid][permamute], playerName[playerid]);
+	mysql_format(connectionHandle, query, 300, "UPDATE zaidejai SET `unbanpriziuretojas` = '%i', `unbanprizisp` = '%i', `perma_mute` = '%i' WHERE vardas = '%e' LIMIT 1;", \
+		pInfo[playerid][unbanpriziuretojas], pInfo[playerid][unbanprizisp], pInfo[playerid][permamute], playerName[playerid]);
+	mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+	mysql_format(connectionHandle, query, 300, "UPDATE darbaiSuPakvietimais_xp SET `MedikoXP` = '%i', `PolicininkoXP` = '%i', `ArmijosXP` = '%i' WHERE Vardas = '%e' LIMIT 1;", \
+		pInfo[playerid][zaidejoMedikuXP], pInfo[playerid][zaidejoPolicijosXP], pInfo[playerid][zaidejoArmijosXP], playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 	return 1;
 

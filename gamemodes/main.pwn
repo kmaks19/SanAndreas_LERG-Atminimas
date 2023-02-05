@@ -37,7 +37,7 @@
 
 #define function%0(%1) forward%0(%1); public%0(%1)
 
-#define lergVersion "LERG # 0.0.2"
+#define lergVersion "LERG # 0.0.4"
 
 #define IsValidNickName(%1) \
     regex_match(%1, "([A-Z]{1,1})[a-z]{2,9}+_([A-Z]{1,1})[a-z]{2,9}")
@@ -52,6 +52,9 @@
 
 #define PlusPlayerScore(%1,%2) \ 
     SetPlayerScore(%1, GetPlayerScore(%1) + %2)   
+
+#define PlusPlayerHealth(%1,%2,%3) \
+	SetPlayerHealth(%1, GetPlayerHealth(%1, %2) + %3)
 
 #define MSG SendClientMessage
 
@@ -78,6 +81,11 @@
 #define KOMANDOSNARIAI (4)
 #define SAVININKAS (5)
 
+#define VIPPRIZIURETOJAS (1)
+#define ADMINPRIZIURETOJAS (2)
+#define DPRIZIURETOJAS (3)
+#define UNBANPRIZIURETOJAS (4)
+
 #define thirtyDays 2592000 //galiojimo laikas
 #define sevenDays 604800
 
@@ -101,37 +109,36 @@
 #define rasytiadmins 12
 #define vipgaliojimas 13
 #define admingaliojimas 14
-#define paskutinis_login 15
-#define nepaememinlist 16
-#define MEDIKUINFO 17
-#define PDINFO 18
-#define noglic 19
-#define bendradarbiai 20
-#define pdkomandos 21
-#define medkomandos 22
-#define armijainfo 23
-#define rlog 24
-#define direktoriulist 25
-#define leisgyviss 26
-#define kviesti 27
-#define ispejimai 28
-#define priezastys 29
-#define drkzinute 30
-#define dvp 31
-#define priimtidarbuotoja 32
-#define dfondas 33
-#define visidarbuotojai 34
-#define kontrole 35
-#define nuimtiisp 36
-#define nedirbantys 37
-#define vipprizkomandos 38
-#define aprizkomandos 39
-#define dprizkomandos 40
-#define valdzioslist 41
-#define savkomandos1 42
-#define savkomandos2 43
-#define savkomandos3 44
-#define drkkomandos 45
+#define nepaememinlist 15
+#define MEDIKUINFO 16
+#define PDINFO 17
+#define noglic 18
+#define bendradarbiai 19
+#define pdkomandos 20
+#define medkomandos 21
+#define armijainfo 22
+#define rlog 23
+#define direktoriulist 24
+#define leisgyviss 25
+#define kviesti 26
+#define ispejimai 27
+#define priezastys 28
+#define drkzinute 29
+#define dvp 30
+#define priimtidarbuotoja 31
+#define dfondas 32
+#define visidarbuotojai 33
+#define kontrole 34
+#define nuimtiisp 35
+#define nedirbantys 36
+#define vipprizkomandos 37
+#define aprizkomandos 38
+#define dprizkomandos 39
+#define valdzioslist 40
+#define savkomandos1 41
+#define savkomandos2 42
+#define savkomandos3 43
+#define drkkomandos 44
 
 #define MAX_DARBU 4
 
@@ -163,10 +170,34 @@ enum darbuinfo
 	dienosminimumasPAGYD,
 	dienosminimumasBAUDOS,
 	direktoriauszinute[128],
-	bool:arijungta
+	bool:arijungta,
+	Rangas1[30],
+	Rangas2[30],
+	Rangas3[30],
+	Rangas4[30],
+	Rangas5[30],
+	Rangas6[30], // 5 Rangai 30 simboliø rangui.,
+
+	Skin1_male,
+	Skin1_female,
+
+	Skin2_male,
+	Skin2_female,
+
+	Skin3_male,
+	Skin3_female,
+
+	Skin4_male,
+	Skin4_female,
+
+	Skin5_male,
+	Skin5_female,
+
+	Skin6_male,
+	Skin6_female
 }
 new DarboInfo[MAX_DARBU][darbuinfo];
-
+//
 enum DPRIZ
 {
 	prizvardas[MAX_PLAYER_NAME],
@@ -206,6 +237,13 @@ enum SAVININKAI
 }
 new SAVININKAI_INFO[SAVININKAI];
 
+enum KNARIAI
+{
+	knario_vardas0[MAX_PLAYER_NAME], // Kolkas 2
+	knario_vardas1[MAX_PLAYER_NAME]
+}
+new KOMANDOSNARIAI_INFO[KNARIAI];
+//
 enum pickupsData
 {
 	ginkline,
@@ -230,7 +268,8 @@ enum pickupsData
 	sveikatospaz,
 	armijosisidarbinimas,
 	armijosinfo,
-	gunlicbuypickup
+	gunlicbuypickup,
+	admbauda
 };
 
 new pickups[1][pickupsData];
@@ -245,7 +284,103 @@ enum
 	YYMMDD 
 };
 
+enum SpikesInfo {
+	Float: SpygliaiX,
+	Float: SpygliaiY,
+	Float: SpygliaiZ,
+	bool: arPadeti,
+	SpygliuObj,
+	Text3D: SpygliuText
+};
+new SpygliaiInfo[MAX_PLAYERS][SpikesInfo];
 
+#define MAX_ITA sizeof(itarimai)
+
+
+enum ita_enum
+{
+	// Itarimo tipas 1 - bauda uþ paprastus nusiþengimus, 2 - bauda uþ átarimus
+	itarimo_vardas[120],
+	itarimo_bausmes_vardas[22],
+	vairavimotaskai, // MAX 100
+	baudoskiekis_adm,
+	starkiekis
+}; // Vienas vairavimo taskas kainuos ?
+
+#define MAX_BAUDOS 50
+
+enum baudos_adm
+{
+	BaudosVardas[120],
+	kamskirta[24],
+	kasisrase[24],
+	kadaisrase[31],
+	baudos_suma
+};
+new BauduInfo[MAX_PLAYERS][MAX_BAUDOS][baudos_adm];
+
+new itarimai[][ita_enum] =
+{
+    {"{8C6547}»{ffffff} Chuliganiðkas vairavimas",																"50 vairavimo taðkø", 50, 40000, 0},
+    {"{8C6547}»{ffffff} Kelio kirtimas per paðalines vietas (þolynus, ðaligatvius ir panaðiai)",    				"20 stars",	 30, 20000, 0},
+    {"{8C6547}»{ffffff} Kampo nukirtimai",   	 																"20 stars",	 15, 15000, 0},
+    {"{8C6547}»{ffffff} Vaþiavimas prieðinga eismo juosta (negalioja lenkanti ir apvaþiuojant kliûtá)",    		"20 stars",	 50, 40000, 0},
+	{"{8C6547}»{ffffff} Ðiukðliadëþiø, stoteliø, hidrantø, ðviesoforø trankymai",                                "20 stars",	 40, 25000, 0},
+	{"{8C6547}»{ffffff} Vaþiavimas geleþinkelio bëgiais",                                						"20 stars",	 50, 50000, 0},
+	{"{8C6547}»{ffffff} Ðokinëjimas per ávairius stunt'us",                                						"20 stars",	 25, 25000, 0},
+	{"{8C6547}»{ffffff} Avarijos sukëlimas (uþ kiekvienà sukeltà skirtingà avarijà)",                            "20 stars",	 50, 50000, 0},
+	{"{8C6547}»{ffffff} DM (masinis þudymas)", "50 star", 0, 0, 50},
+	{"{8C6547}»{ffffff} Relog", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Pareigûno uþpuolimas", "20 star", 0, 0, 20},
+	{"{8C6547}»{ffffff} Pareigûno neklausymas arba(ir) áþeidinëjimas", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Civilio uþpuolimas arba(ir) áþeidinëjimas", "25 star", 0,0, 25},
+	{"{8C6547}»{ffffff} Ginklo demonstravimas vieðoje vietoje", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Ginklo naudojimas vieðoje vietoje", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Kyðio siûlymas", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Maðinos dauþymas", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Trukdymas policijos darbui", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Iðlipimas ið stabdomos tr. priemonës", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Pagalba bëgliui", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Bereikðmis policijos kvietimas", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Grasinimas policijos pareigûnui", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Nepasiðalinimas ið streiko vietos, kai buvo to pareikalauta", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Chuliganiðkas elgesys", "25 star", 0, 0, 25},
+	{"{8C6547}»{ffffff} Reido trukdymas", "25 star", 0, 0, 25}
+};
+//=============== /dzinute =============
+enum darbuskinlist
+{
+	Skinas
+};
+
+new pdskinlistmale[][darbuskinlist] =
+{
+	{280},
+	{281},
+	{282},
+	{283},
+	{284},
+	{288},
+	{300},
+	{301},
+	{302},
+	{310},
+	{311}
+};
+
+new medikuskinlistmale[][darbuskinlist] =
+{
+	{274},
+	{275},
+	{276}
+};
+
+new pdskinlistfemale[][darbuskinlist] =
+{	
+	{306},
+	{307},
+	{309}
+};	
 
 new AllowedCharacters[] =
 {
@@ -303,9 +438,6 @@ enum playerData
 	visp,
 	disp,
 	drkisp, 
-	dprizisp,
-	adminprizisp,
-	unbanprizisp,
 	Invited,
 	ziuridarbuotoja,
 	ziuribendradarbi,
@@ -322,12 +454,8 @@ enum playerData
 	bool:viskvpd,
 
 	pagydymodelay,
-	dpriziuretojas,
-	unbanpriziuretojas,
-	unbanprizpareigosenuo[31],
-	dprizpareigosenuo[31],
-	vipprizpareigosenuo[31],
-	aprizpareigosenuo[31],
+	priziuretojas,
+	prizpareigosenuo[31],
 	direkopareigosenuo[31],
 	lastloginIP[16],
 	lastloginDATE[31],
@@ -338,8 +466,6 @@ enum playerData
 	bool:sveikatpaz,
 	pakvietimastimer,
 	adminpriz,
-	vippriz,
-	vipprizisp,
 	prizskelbti,
 	bool:Nutazintas,
 	NutazintasTimer,
@@ -349,7 +475,11 @@ enum playerData
 	permamute,
 	zaidejoMedikuXP,
 	zaidejoPolicijosXP,
-	zaidejoArmijosXP
+	zaidejoArmijosXP,
+	VairavimoNuobauduTaskai,
+	priziuretojausisp,
+	DarboRangas,
+	KasUztilde[24]
 };
 new pInfo[MAX_PLAYERS][playerData];
 
@@ -364,7 +494,6 @@ new
 	Corrupt_Check[MAX_PLAYERS],
 	MuteTime[MAX_PLAYERS],
 	IPAS[MAX_PLAYERS][17],
-	ac_SkipCheck[MAX_PLAYERS],
 	playerCount,
 	bool:suLiemene[MAX_PLAYERS],
 	bool:bega[MAX_PLAYERS],
@@ -378,7 +507,11 @@ new
 	IskvietimoCP[MAX_PLAYERS],
 	Iskvietimotimer[MAX_PLAYERS],
 	nutazintas_idtimer[MAX_PLAYERS],
-	ServerRestartTime = 0
+	ServerRestartTime = 0,
+	Text:Logotipas[3],
+	Text:SiandienosData[1],
+	Text:Laikrodis[1],
+	SaveTimer = 0
 ;
 
 enum FirstAdminLevel
@@ -473,13 +606,6 @@ enum AdminHelpSystem
 }
 new AHS[MAX_PLAYERS][AdminHelpSystem];
 
-enum E_AC_WEAPONS
-{
-	ac_WeaponId,
-	ac_Ammo
-};
-new ac_Weapons[MAX_PLAYERS][13][E_AC_WEAPONS];
-
 main()
 {
 	SetMaxConnections(1,e_FLOOD_ACTION_KICK);
@@ -487,6 +613,7 @@ main()
 
 public OnGameModeInit()
 {
+	DisableInteriorEnterExits();
 	new MySQLOpt: option_id = mysql_init_options();
 	mysql_set_option(option_id, AUTO_RECONNECT, true);
 	mysql_log(ERROR);
@@ -502,7 +629,7 @@ public OnGameModeInit()
 	mysql_set_charset("cp1257");
 	print("Prisijungimas prie duomenø bazës pavyko!");
 
-	mysql_format(connectionHandle, query, 250, "SELECT jobID, pinigaifonde, patirtis, drk, pav, drkpareigosenuo, pavpareigosenuo, dirba, nedirbsiki, dienosminimumasMIN, dienosminimumasPAGYD, dienosminimumasBAUDOS, arijungta, zinute FROM darbai");
+	mysql_format(connectionHandle, query, 250, "SELECT * FROM darbai");
 	mysql_tquery(connectionHandle, query, "LoadJobs", "");
 
 	SetTimer("Game", 60000, true);
@@ -510,7 +637,6 @@ public OnGameModeInit()
 	SetTimer("AFK", 1000, true);
 
 	SetNameTagDrawDistance(30.0);
-	DisableInteriorEnterExits();
 	EnableStuntBonusForAll(false);
 	SetWeather(18);
 
@@ -518,8 +644,10 @@ public OnGameModeInit()
 
 	LoadPickups();
 	LoadJobVehicles();
+	LoadTextDraws();
 
 	SendRconCommand("password 0");
+
 	return 1;
 }
 
@@ -570,8 +698,6 @@ public OnPlayerConnect(playerid)
 
 	Corrupt_Check[playerid]++;
 
-	ac_Reset(playerid);
-
 	GetPlayerIp(playerid, IPAS[playerid], sizeof(IPAS));
 
 	mysql_format(connectionHandle, query, 144, "SELECT * FROM `banlist` WHERE `IP` = '%s' LIMIT 1",IPAS[playerid]);
@@ -602,6 +728,16 @@ public OnPlayerDisconnect(playerid, reason)
     	case 2: SendFormatAdmin(0xAFAFAFFF, "{FF2D00}• {BDBCBC}%s {DAD9D9} | buvo iðmestas. Turëjo {FF2D00}%i {DAD9D9}star, {BDBCBC}%s {FF2D00}nuo policijos", playerName[playerid], pInfo[playerid][gaudomumas], string);
     }
 
+	if(SpygliaiInfo[playerid][arPadeti] == true)
+    {
+        DestroyDynamicObject(SpygliaiInfo[playerid][SpygliuObj]);
+		Delete3DTextLabel(SpygliaiInfo[playerid][SpygliuText]);
+    	SpygliaiInfo[playerid][arPadeti] = false;
+		SpygliaiInfo[playerid][SpygliaiX] = 0;
+		SpygliaiInfo[playerid][SpygliaiY] = 0;
+		SpygliaiInfo[playerid][SpygliaiZ] = 0;
+    }
+
 	playerName[playerid][0] = EOS;
 	
 	return 1;
@@ -617,13 +753,14 @@ public OnPlayerSpawn(playerid)
 		pInfo[playerid][patirtis] += 5000;
 		
 		SetTimerEx("Galiojimas", 1000, true, "i", playerid);
-
-		poRegistracijos[playerid] = false;
 		online[playerid] = true;
 		leisgyvistimer[playerid] = SetTimerEx("TikrinamGyvybes",500,true, "i", playerid);
 
 		mysql_format(connectionHandle, query, 140, "SELECT MedikoXP, PolicininkoXP, ArmijosXP FROM darbaiSuPakvietimais_xp WHERE Vardas = '%e'", playerName[playerid]);
 		mysql_tquery(connectionHandle, query, "OnPlayerJobXPLoad", "i", playerid);
+		ShowLogotipas(playerid);
+		ShowDataIrLaikas(playerid);
+		poRegistracijos[playerid] = false;
 	}
 	if(poPrisijungimo[playerid])
 	{
@@ -644,29 +781,28 @@ public OnPlayerSpawn(playerid)
 			pInfo[playerid][VipLaikas] = 0;
 			MSG(playerid, 0xFF0000AA, "- Jûsø „VIP“ paslaugos 30 D. galiojimo laikas baigësi. Galite ásigyti ið naujo /paslaugos");
 		}
-
-		new String[1000],lastinfo[900];
-		format(lastinfo, sizeof(lastinfo), "{EE870B}•Paskutiná kartà {EE870B}prisijungæs{ffffff}\n buvote{EE870B} %s \n{ffffff} ið {EE870B}%s{ffffff} IP adreso", pInfo[playerid][lastloginDATE], pInfo[playerid][lastloginIP]);
-        strcat(String,lastinfo);
-		ShowPlayerDialog(playerid, paskutinis_login, DIALOG_STYLE_MSGBOX, "Paskutinis prisijungimas", String, "Supratau", "");
 		
 		
 		if(pInfo[playerid][VIP] == 1) MSG(playerid, -1, "{75B244}••• {FFFFFF}Sveikiname sugráþus, VIP nari! Jûsø komandos: {ffff1a} /vkomandos{ffffff}.");
 		if(pInfo[playerid][ADMIN] > 0) MSG(playerid, -1, "{75B244}••• {FFFFFF}Sveikiname sugráþus, administratoriau! Jûsø komandos: {05c54e} /akomandos{ffffff}.");
 		if(pInfo[playerid][ADMIN] == SAVININKAS) MSG(playerid, -1, "{75B244}••• {FFFFFF}Sveikiname sugráþus, savininke! Jûsø komandos: {3abeff} /skomandos{ffffff}.");
-		if(pInfo[playerid][dpriziuretojas] == 1) MSG(playerid, -1, "{75B244}••• {FFFFFF}Sveikiname sugráþus, direktoriø priþiûrëtojau! Jûsø komandos: {3abeff} /dprizkomandos{ffffff}.");
-		if(pInfo[playerid][vippriz] == 1) MSG(playerid, -1, "{75B244}••• {FFFFFF}Sveikiname sugráþus, V.I.P nariø priþiûrëtojau! Jûsø komandos: {3abeff} /vprizkomandos{ffffff}.");
-		if(pInfo[playerid][adminpriz] == 1) MSG(playerid, -1, "{75B244}••• {FFFFFF}Sveikiname sugráþus, administratoriø priþiûrëtojau! Jûsø komandos: {3abeff} /aprizkomandos{ffffff}.");
-		if(pInfo[playerid][unbanpriziuretojas] == 1) MSG(playerid, -1, "{75B244}••• {FFFFFF}Sveikiname sugráþus, UNBAN priþiûrëtojau! Jûsø komandos: {3abeff} /unbanprizkomandos{ffffff}.");
+		if(pInfo[playerid][priziuretojas] == DPRIZIURETOJAS) MSG(playerid, -1, "{75B244}••• {FFFFFF}Sveikiname sugráþus, direktoriø priþiûrëtojau! Jûsø komandos: {3abeff} /dprizkomandos{ffffff}.");
+		if(pInfo[playerid][priziuretojas] == VIPPRIZIURETOJAS) MSG(playerid, -1, "{75B244}••• {FFFFFF}Sveikiname sugráþus, V.I.P nariø priþiûrëtojau! Jûsø komandos: {3abeff} /vprizkomandos{ffffff}.");
+		if(pInfo[playerid][priziuretojas] == ADMINPRIZIURETOJAS) MSG(playerid, -1, "{75B244}••• {FFFFFF}Sveikiname sugráþus, administratoriø priþiûrëtojau! Jûsø komandos: {3abeff} /aprizkomandos{ffffff}.");
+		if(pInfo[playerid][priziuretojas] == UNBANPRIZIURETOJAS) MSG(playerid, -1, "{75B244}••• {FFFFFF}Sveikiname sugráþus, UNBAN priþiûrëtojau! Jûsø komandos: {3abeff} /unbanprizkomandos{ffffff}.");
 		if(pInfo[playerid][direktorius] > 0) MSG(playerid, -1, "{75B244}••• {FFFFFF}Sveikiname sugráþus, direktoriau! Jûsø komandos: {3abeff} /dkomandos{ffffff}.");
 
-		poPrisijungimo[playerid] = false;
 		SetPlayerSkillLevel (playerid, WEAPONSKILL_PISTOL, 1);
 		online[playerid] = true;
 		leisgyvistimer[playerid] = SetTimerEx("TikrinamGyvybes",500,true, "i", playerid);
 
 		mysql_format(connectionHandle, query, 140, "SELECT MedikoXP, PolicininkoXP, ArmijosXP FROM darbaiSuPakvietimais_xp WHERE Vardas = '%e'", playerName[playerid]);
 		mysql_tquery(connectionHandle, query, "OnPlayerJobXPLoad", "i", playerid);
+
+		ShowLogotipas(playerid);
+		ShowDataIrLaikas(playerid);
+
+		poPrisijungimo[playerid] = false;
 	}
 	if(poMirties[playerid])
 	{
@@ -676,10 +812,10 @@ public OnPlayerSpawn(playerid)
 		if(leisgyvis[playerid]){ leisgyvis[playerid] = false; Delete3DTextLabel(leisgyvistext[playerid]);}
 		KillTimer(leisgyvistimer[playerid]);
 		leisgyvistimer[playerid] = SetTimerEx("TikrinamGyvybes",500,true, "i", playerid);
-		poMirties[playerid] = false;
 		KillTimer(nutazintas_idtimer[playerid]);
 		pInfo[playerid][Nutazintas] = false;
 		pInfo[playerid][NutazintasTimer] = 0;
+		poMirties[playerid] = false;
 	}
 	return 1;
 }
@@ -691,7 +827,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 	poMirties[playerid] = true;
 	SetPlayerVirtualWorld(playerid, 0);
 	SetPlayerInterior(playerid, 0);
-	ac_ResetPlayerWeapons(playerid, 7);
+	ResetPlayerWeapons(playerid);
 	return 1;
 }
 
@@ -707,6 +843,10 @@ public OnVehicleDeath(vehicleid, killerid)
 
 public OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
 {
+	if(suLiemene[playerid]){
+		new Float:hp; 
+		PlusPlayerHealth(playerid, hp, randomEx(5, 15));
+	}
 	return 1;
 }
 
@@ -897,6 +1037,8 @@ YCMD:pasigydyti(playerid, params[], help)
 	#pragma unused params, help
 	if(pInfo[playerid][VIP] > 0 || pInfo[playerid][ADMIN] > 0)
 	{
+		if(pInfo[playerid][Surakintas]) return MSG(playerid, RED, "- Jûs surakintas");
+		if(bega[playerid]) return MSG(playerid, RED, "- Jûs esate paskelbtas bëgliu!");
 		if(pInfo[playerid][selfhealtimer] > gettime() && pInfo[playerid][ADMIN] < SAVININKAS)
 		{
 			SendFormat(playerid, 0xFF0000AA, "- Pasigydyti galite tik kas 5 minutes, vël galësite pasigydyti po %s", ConvertSeconds(pInfo[playerid][selfhealtimer] - gettime()));
@@ -940,27 +1082,36 @@ YCMD:tpd(playerid, params[], help)
 {
 	if(pInfo[playerid][VIP] == 1 || pInfo[playerid][ADMIN] == SAVININKAS)
 	{
+		if(pInfo[playerid][pinigai] < 500) return MSG(playerid, RED, "- Neturite tiek pinigø!");
+		if(pInfo[playerid][Spectatina]) return MSG(playerid, RED, "- Jûs stebëjimo reþime!");
+		if(bega[playerid]) return MSG(playerid, RED, "- Jûs esate paskelbtas bëgliu!");
+		if(pInfo[playerid][Surakintas]) return MSG(playerid, RED, "- Jûs surakintas");
+		if(pInfo[playerid][ADMIN] < KOMANDOSNARIAI){pInfo[playerid][pinigai] -= 500; MSG(playerid, GREEN, "+ Nusiteleportavote iki darbo vietos uþ 500€");}
 	    switch(pInfo[playerid][darbas])
 	    {
 			case MEDIKAI:
 			{
 				SetPlayerPos(playerid, -2566.1682,607.9061,14.4592);
 				SetPlayerFacingAngle(playerid, 1.0781);
+				SetPlayerInterior(playerid, 0);
+				SetPlayerVirtualWorld(playerid, 0);
 			}
 			case POLICININKAI:
 			{
 				SetPlayerPos(playerid, -1569.7262,660.9575,7.1875);
 				SetPlayerFacingAngle(playerid, 77.5284);
+				SetPlayerInterior(playerid, 0);
+				SetPlayerVirtualWorld(playerid, 0);
 			}
 			case ARMIJA:
 			{
+				SetPlayerInterior(playerid, 0);
+				SetPlayerVirtualWorld(playerid, 0);
 				//TODO: 
 			}
 			default: return MSG(playerid, RED, "- Jûs bedarbis!");
 	    }
-	    if(pInfo[playerid][pinigai] < 500) return MSG(playerid, RED, "- Neturite tiek pinigø!");
-		if(pInfo[playerid][ADMIN] < KOMANDOSNARIAI){pInfo[playerid][pinigai] -= 500; MSG(playerid, GREEN, "+ Nusiteleportavote iki darbo vietos uþ 500€");}
-		else return MSG(playerid, GREEN, "+ Nusiteleportavote iki darbo vietos!");
+		MSG(playerid, GREEN, "+ Nusiteleportavote iki darbo vietos!");
 	}
 	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
 	return 1;
@@ -1017,8 +1168,8 @@ YCMD:vginklai(playerid, params[], help)
 	if(pInfo[playerid][VIP] > 0 || pInfo[playerid][ADMIN] == SAVININKAS)
 	{
 		if(pInfo[playerid][CmdVipTimerG] > gettime() && pInfo[playerid][ADMIN] < SAVININKAS) return SendFormat(playerid, 0xFF0000AA, "- VIP ginklø paketà galite pasiimti kas 5min, vël galësite pasiimti po %s", ConvertSeconds(pInfo[playerid][CmdVipTimerG] - gettime()));
-		ac_GivePlayerWeapon(playerid, WEAPON_BAT, 1);
-  		ac_GivePlayerWeapon(playerid, WEAPON_COLT45, 60);
+		GivePlayerWeapon(playerid, WEAPON_BAT, 1);
+  		GivePlayerWeapon(playerid, WEAPON_COLT45, 60);
     	MSG(playerid, -1, "{00FF11}+ Gavote VIP ginklø paketà");
 	    pInfo[playerid][CmdVipTimerG] = gettime() + 300;//5min
 	}
@@ -1263,7 +1414,7 @@ function OnRequestNepaemeMinimumo(playerid)
 
 YCMD:vispeti(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][vippriz] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == VIPPRIZIURETOJAS)
 	{
 		new id, reason[76];
 
@@ -1307,7 +1458,7 @@ YCMD:vispeti(playerid, params[], help)
 
 YCMD:vispetioff(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][vippriz] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == VIPPRIZIURETOJAS)
 	{
 		new Vardas[MAX_PLAYER_NAME], reason[25], id;
 		if(sscanf(params, "s[24]s[25]", Vardas, reason)) return MSG(playerid, 0x00B8D8AA, "Áspëti V.I.P nará (OFFLINE): /aispetioff [Vardas_Pavardë][Priezastis]");
@@ -1366,9 +1517,9 @@ YCMD:ispetiunbanpriz(playerid, params[], help)
 		if(sscanf(params, "us[25]", id, reason)) return MSG(playerid, 0x00B8D8AA, "• Áspëti UNBAN priþiûrëtojà: /ispetiunbanpriz [Dalis vardo/ID][Priezatsis]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, RED, "- Tokio þaidëjo nëra");
 		if(!online[id]) return MSG(playerid, RED, "- Þaidëjas neprisijungæs");
-		if(pInfo[id][unbanpriziuretojas] == 0) return MSG(playerid, RED, "- Þaidëjas nëra unbanpriziuretojas priþiûrëtojas!");
+		if(pInfo[id][priziuretojas] != UNBANPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra UNBAN priziuretojas priþiûrëtojas!");
 
-		pInfo[id][unbanprizisp] ++;
+		pInfo[id][priziuretojausisp]++;
 		UNBANPRIZ_INFO[prizisp]++;
 
 		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
@@ -1379,22 +1530,22 @@ YCMD:ispetiunbanpriz(playerid, params[], help)
 			GautiData(0), reason, playerName[playerid], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET unbanprizisp = '%i' WHERE vardas = '%e'", \
-			pInfo[id][unbanprizisp], playerName[id]);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET prizisp = '%i' WHERE vardas = '%e'", \
+			pInfo[id][priziuretojausisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE unban_priz SET prizisp = '%i' WHERE vardas = '%e'", \
-			pInfo[id][unbanprizisp], playerName[id]);
+			pInfo[id][priziuretojausisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		if(pInfo[id][unbanprizisp] >= 3)
+		if(pInfo[id][priziuretojausisp] >= 3)
 		{
 			SendFormat(playerid, GREEN, "+ Áspëjote UNBAN priþiûrëtojà %s dël %s, jis surinko 3 ásp ir yra nuðalinamas nuo pareigø.", playerName[playerid], reason);
 
 			SendFormat(id, GREEN, "• Savininkas %s áspëjo jus dël %s, surinkote 3 ásp ir esate nuðalinamas nuo pareigø.", playerName[playerid], reason);
 
-			pInfo[id][unbanpriziuretojas] = 0;
-			pInfo[id][unbanprizisp] = 0;
+			pInfo[id][priziuretojas] = 0;
+			pInfo[id][priziuretojausisp] = 0;
 
 			UNBANPRIZ_INFO[prizvardas] = EOS;
 			UNBANPRIZ_INFO[prizpareigosenuo] = EOS;
@@ -1403,14 +1554,14 @@ YCMD:ispetiunbanpriz(playerid, params[], help)
 			mysql_format(connectionHandle, query, 140, "UPDATE unban_priz SET prizisp = '0', vardas = '', prizpareigosenuo = ''");
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET unbanpriziuretojas = '0', unbanprizisp = '0', unbanprizpareigosenuo = '' WHERE vardas = '%e'", \
+			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", \
 				playerName[id]);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 		}
 		else
 		{
-			SendFormat(playerid, GREEN, "+ Áspëjote UNBAN priþiûrëtojà %s dël %s, dabar jis turi %i áspëjimus", playerName[id], reason, pInfo[id][unbanprizisp]);
-			SendFormat(id, GREEN, "• Savininkas %s áspëjo jus dël %s, dabar turite %i áspëjimus", playerName[playerid], reason, pInfo[id][unbanprizisp]);
+			SendFormat(playerid, GREEN, "+ Áspëjote UNBAN priþiûrëtojà %s dël %s, dabar jis turi %i áspëjimus", playerName[id], reason, pInfo[id][priziuretojausisp]);
+			SendFormat(id, GREEN, "• Savininkas %s áspëjo jus dël %s, dabar turite %i áspëjimus", playerName[playerid], reason, pInfo[id][priziuretojausisp]);
 		}
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -1425,9 +1576,9 @@ YCMD:ispetidpriz(playerid, params[], help)
 		if(sscanf(params, "us[25]", id, reason)) return MSG(playerid, 0x00B8D8AA, "• Áspëti direktoriø priþiûrëtojà: /ispetidpriz [Dalis vardo/ID][Priezatsis]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, RED, "- Tokio þaidëjo nëra");
 		if(!online[id]) return MSG(playerid, RED, "- Þaidëjas neprisijungæs");
-		if(pInfo[id][dpriziuretojas] == 0) return MSG(playerid, RED, "- Þaidëjas nëra direktoriø priþiûrëtojas!");
+		if(pInfo[id][priziuretojas] != DPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra direktoriø priþiûrëtojas!");
 
-		pInfo[id][dprizisp] ++;
+		pInfo[id][priziuretojausisp] ++;
 		DPRIZINFO[prizisp]++;
 
 		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
@@ -1438,22 +1589,22 @@ YCMD:ispetidpriz(playerid, params[], help)
 			GautiData(0), reason, playerName[playerid], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET dprizisp = '%i' WHERE vardas = '%e'", \
-			pInfo[id][dprizisp], playerName[id]);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET prizisp = '%i' WHERE vardas = '%e'", \
+			pInfo[id][priziuretojausisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE dpriz SET prizisp = '%i' WHERE vardas = '%e'", \
-			pInfo[id][dprizisp], playerName[id]);
+			pInfo[id][priziuretojausisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		if(pInfo[id][dprizisp] >= 3)
+		if(pInfo[id][priziuretojausisp] >= 3)
 		{
 			SendFormat(playerid, GREEN, "+ Áspëjote direktoriø priþiûrëtojà %s dël %s, jis surinko 3 ásp ir yra nuðalinamas nuo pareigø.", playerName[playerid], reason);
 
 			SendFormat(id, GREEN, "• Savininkas %s áspëjo jus dël %s, surinkote 3 ásp ir esate nuðalinamas nuo pareigø.", playerName[playerid], reason);
 
-			pInfo[id][dpriziuretojas] = 0;
-			pInfo[id][dprizisp] = 0;
+			pInfo[id][priziuretojas] = 0;
+			pInfo[id][priziuretojausisp] = 0;
 
 			DPRIZINFO[prizvardas] = EOS;
 			DPRIZINFO[prizpareigosenuo] = EOS;
@@ -1462,13 +1613,13 @@ YCMD:ispetidpriz(playerid, params[], help)
 			mysql_format(connectionHandle, query, 140, "UPDATE dpriz SET prizisp = '0', vardas = '', prizpareigosenuo = ''");
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET dpriziuretojas = '0', dprizisp = '0', dprizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
+			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 		}
 		else
 		{
-			SendFormat(playerid, GREEN, "+ Áspëjote direktoriø priþiûrëtojà %s dël %s, dabar jis turi %i áspëjimus", playerName[id], reason, pInfo[id][dprizisp]);
-			SendFormat(id, GREEN, "• Savininkas %s áspëjo jus dël %s, dabar turite %i áspëjimus", playerName[playerid], reason, pInfo[id][dprizisp]);
+			SendFormat(playerid, GREEN, "+ Áspëjote direktoriø priþiûrëtojà %s dël %s, dabar jis turi %i áspëjimus", playerName[id], reason, pInfo[id][priziuretojausisp]);
+			SendFormat(id, GREEN, "• Savininkas %s áspëjo jus dël %s, dabar turite %i áspëjimus", playerName[playerid], reason, pInfo[id][priziuretojausisp]);
 		}
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -1477,7 +1628,7 @@ YCMD:ispetidpriz(playerid, params[], help)
 
 YCMD:aispetioff(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][adminpriz] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == ADMINPRIZIURETOJAS)
 	{
 		new Vardas[MAX_PLAYER_NAME], reason[25], id;
 		if(sscanf(params, "s[24]s[25]", Vardas, reason)) return MSG(playerid, 0x00B8D8AA, "Áspëti administratoriø (OFFLINE): /aispetioff [Vardas_Pavardë][Priezastis]");
@@ -1539,7 +1690,7 @@ YCMD:ispetiunbanprizoff(playerid, params[], help)
 
 		if(id != INVALID_PLAYER_ID) return MSG(playerid, 0xFF0000AA, "- Þaidëjas prisijungæs");
 
-		mysql_format(connectionHandle, query, 140, "SELECT unbanpriziuretojas, unbanprizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_format(connectionHandle, query, 140, "SELECT priziuretojas, prizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "ispetiunbanpriz_off", "iss", playerid, Vardas, reason);
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -1555,7 +1706,7 @@ function ispetiunbanpriz_off(playerid, name[], reason[])
 		cache_get_value_index_int(0, 0, unbanpriz_id);
 		cache_get_value_index_int(0, 0, unbanprizo_isp);
 
-		if(unbanpriz_id == 0) return MSG(playerid, RED, "- Þaidëjas nëra UNBAN priþiûrëtojas");
+		if(unbanpriz_id != UNBANPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra UNBAN priþiûrëtojas");
 
 		// 1 vip
 		// 2 admin
@@ -1576,7 +1727,7 @@ function ispetiunbanpriz_off(playerid, name[], reason[])
 			GautiData(0), reason, playerName[playerid], name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 150, "UPDATE zaidejai SET unbanprizisp = '%i' WHERE vardas = '%e'", unbanprizo_isp, name);
+		mysql_format(connectionHandle, query, 150, "UPDATE zaidejai SET prizisp = '%i' WHERE vardas = '%e'", unbanprizo_isp, name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 150, "UPDATE unban_priz SET prizisp = '%i' WHERE vardas = '%e'", unbanprizo_isp, name);
@@ -1586,7 +1737,7 @@ function ispetiunbanpriz_off(playerid, name[], reason[])
 		{
 			SendFormat(playerid, GREEN, "+ Áspëjote UNBAN priþiûrëtojà %s, dël %s, jis surinko 3 ásp ir yra nuðalintas nuo pareigø!", name, reason);
 
-			mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET unbanpriziuretojas = '0', unbanprizisp = '0', unbanprizpareigosenuo = '' WHERE vardas = '%e'", name);
+			mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", name);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 			mysql_format(connectionHandle, query, 140, "UPDATE unban_priz SET prizisp = '0', vardas = '', prizpareigosenuo = ''");
@@ -1612,7 +1763,7 @@ YCMD:ispetiaprizoff(playerid, params[], help)
 
 		if(id != INVALID_PLAYER_ID) return MSG(playerid, 0xFF0000AA, "- Þaidëjas prisijungæs");
 
-		mysql_format(connectionHandle, query, 140, "SELECT adminpriz, adminprizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_format(connectionHandle, query, 140, "SELECT priziuretojas, prizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "ispetiadminpriz_off", "iss", playerid, Vardas, reason);
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -1628,7 +1779,7 @@ function ispetiadminpriz_off(playerid, name[], reason)
 		cache_get_value_index_int(0, 0, admin_prz);
 		cache_get_value_index_int(0, 0, adminprizo_isp);
 
-		if(admin_prz == 0) return MSG(playerid, RED, "- Þaidëjas nëra administratoriø priþiûrëtojas");
+		if(admin_prz == 0 || admin_prz != ADMINPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra administratoriø priþiûrëtojas");
 
 		// 1 vip
 		// 2 admin
@@ -1649,7 +1800,7 @@ function ispetiadminpriz_off(playerid, name[], reason)
 			GautiData(0), reason, playerName[playerid], name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 150, "UPDATE zaidejai SET adminprizisp = '%i' WHERE vardas = '%e'", \
+		mysql_format(connectionHandle, query, 150, "UPDATE zaidejai SET prizisp = '%i' WHERE vardas = '%e'", \
 			adminprizo_isp, name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
@@ -1661,7 +1812,7 @@ function ispetiadminpriz_off(playerid, name[], reason)
 		{
 			SendFormat(playerid, GREEN, "+ Áspëjote administratoriø priþiûrëtojà %s, dël %s, jis surinko 3 ásp ir yra nuðalintas nuo pareigø!", name, reason);
 
-			mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET adminpriz = '0', adminprizisp = '0', aprizpareigosenuo = '' WHERE vardas = '%e'", name);
+			mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", name);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 			mysql_format(connectionHandle, query, 140, "UPDATE admin_priz SET prizisp = '0', vardas = '', prizpareigosenuo = ''");
@@ -1691,7 +1842,7 @@ YCMD:ispetivipprizoff(playerid, params[], help)
 
 		if(id != INVALID_PLAYER_ID) return MSG(playerid, 0xFF0000AA, "- Þaidëjas prisijungæs");
 
-		mysql_format(connectionHandle, query, 140, "SELECT vippriz, vipprizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_format(connectionHandle, query, 140, "SELECT priziuretojas, prizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "ispetivippriz_off", "iss", playerid, Vardas, reason);
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -1707,7 +1858,7 @@ function ispetivippriz_off(playerid, name[], reason[])
 		cache_get_value_index_int(0, 0, vip_prz);
 		cache_get_value_index_int(0, 0, vipprizo_isp);
 
-		if(vip_prz == 0) return MSG(playerid, RED, "- Þaidëjas nëra V.I.P priþiûrëtojas");
+		if(vip_prz == 0 || vip_prz != VIPPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra V.I.P priþiûrëtojas");
 
 		// 1 vip
 		// 2 admin
@@ -1727,7 +1878,7 @@ function ispetivippriz_off(playerid, name[], reason[])
 			GautiData(0), reason, playerName[playerid], name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 150, "UPDATE zaidejai SET vipprizisp = '%i' WHERE vardas = '%e'", \
+		mysql_format(connectionHandle, query, 150, "UPDATE zaidejai SET prizisp = '%i' WHERE vardas = '%e'", \
 			vipprizo_isp, name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
@@ -1739,7 +1890,7 @@ function ispetivippriz_off(playerid, name[], reason[])
 		{
 			SendFormat(playerid, GREEN, "+ Áspëjote V.I.P priþiûrëtojà %s, dël %s, jis surinko 3 ásp ir yra nuðalintas nuo pareigø!", name, reason);
 
-			mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET vippriz = '0', vipprizisp = '0', vipprizpareigosenuo = '' WHERE vardas = '%e'", name);
+			mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", name);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 			mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizisp = '0', vardas = '', prizpareigosenuo = ''");
@@ -1769,7 +1920,7 @@ YCMD:ispetidprizoff(playerid, params[], help)
 
 		if(id != INVALID_PLAYER_ID) return MSG(playerid, 0xFF0000AA, "- Þaidëjas prisijungæs");
 
-		mysql_format(connectionHandle, query, 140, "SELECT dpriziuretojas, dprizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_format(connectionHandle, query, 140, "SELECT priziuretojas, prizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "Ispetidprizaoff", "iss", playerid, Vardas, reason);
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -1785,42 +1936,45 @@ function Ispetidprizaoff(playerid, name[], reason[])
 		cache_get_value_index_int(0, 0, dprizas);
 		cache_get_value_index_int(0, 1, dprizoisp);
 
-		if(dprizas == 0) return MSG(playerid, RED, "- Þaidëjas nëra direktoriø priþiûrëtojas");
-
-		dprizoisp ++;
-
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
-			GautiData(0), reason, playerName[playerid], name, 4);
-		mysql_tquery(connectionHandle, query, "SendQuery", "");
-
-		mysql_format(connectionHandle, query, 200, "INSERT INTO `dprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
-			GautiData(0), reason, playerName[playerid], name);
-		mysql_tquery(connectionHandle, query, "SendQuery", "");
-
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET dprizisp = '%i' WHERE vardas = '%e'", dprizoisp, name);
-		mysql_tquery(connectionHandle, query, "SendQuery", "");
-
-		mysql_format(connectionHandle, query, 140, "UPDATE dpriz SET prizisp = '%i' WHERE vardas = '%e'", dprizoisp, name);
-		mysql_tquery(connectionHandle, query, "SendQuery", "");
-
-		if(dprizoisp >= 3)
+		if(dprizas == DPRIZIURETOJAS)
 		{
-			SendFormat(playerid, GREEN, "+ Áspëjote direktoriø priþiûrëtojà %s, dël %s, jis surinko 3 ásp ir yra nuðalintas nuo pareigø!", name, reason);
+			
+			dprizoisp ++;
 
-			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET dpriziuretojas = '0', dprizisp = '0', dprizpareigosenuo = '' WHERE vardas = '%e'", name);
+			mysql_format(connectionHandle, query, 200, "INSERT INTO `ispejimai` (`data`, `priezastis`, `kasispejo`, `vardas`, `isptipas`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+				GautiData(0), reason, playerName[playerid], name, 4);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-			mysql_format(connectionHandle, query, 140, "UPDATE dpriz SET prizisp = '0', vardas = '', prizpareigosenuo = ''");
+			mysql_format(connectionHandle, query, 200, "INSERT INTO `dprizISP_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", \
+				GautiData(0), reason, playerName[playerid], name);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-			DPRIZINFO[prizvardas] = EOS;
-			DPRIZINFO[prizpareigosenuo] = EOS;
-			DPRIZINFO[prizisp] = 0;
+			mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET prizisp = '%i' WHERE vardas = '%e'", dprizoisp, name);
+			mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+			mysql_format(connectionHandle, query, 140, "UPDATE dpriz SET prizisp = '%i' WHERE vardas = '%e'", dprizoisp, name);
+			mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+			if(dprizoisp >= 3)
+			{
+				SendFormat(playerid, GREEN, "+ Áspëjote direktoriø priþiûrëtojà %s, dël %s, jis surinko 3 ásp ir yra nuðalintas nuo pareigø!", name, reason);
+
+				mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", name);
+				mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+				mysql_format(connectionHandle, query, 140, "UPDATE dpriz SET prizisp = '0', vardas = '', prizpareigosenuo = ''");
+				mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+				DPRIZINFO[prizvardas] = EOS;
+				DPRIZINFO[prizpareigosenuo] = EOS;
+				DPRIZINFO[prizisp] = 0;
+			}
+			else
+			{
+				SendFormat(playerid, GREEN, "+ Áspëjote direktoriø priþiûrëtojà %s, dël %s, dabar jis turi %i ásp.", name, reason, dprizoisp);
+			}
 		}
-		else
-		{
-			SendFormat(playerid, GREEN, "+ Áspëjote direktoriø priþiûrëtojà %s, dël %s, dabar jis turi %i ásp.", name, reason, dprizoisp);
-		}
+		else return MSG(playerid, RED, "- Þaidëjas nëra direktoriø priþiûrëtojas!");
 	} 
 	else return MSG(playerid, RED, "- Tokio þaidëjo nëra duomenø bazëje!");
 	return 1;
@@ -1838,12 +1992,8 @@ YCMD:skirtidprizoff(playerid, params[], help)
 
 		if(id != INVALID_PLAYER_ID) return MSG(playerid, 0xFF0000AA, "- Þaidëjas prisijungæs!");
 
-		mysql_format(connectionHandle, query, 140, "SELECT dpriziuretojas FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_format(connectionHandle, query, 140, "SELECT priziuretojas FROM zaidejai WHERE vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "Skirtidprizaoff", "is", playerid, Vardas);
-
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET dpriziuretojas = '1', dprizisp = '0', dprizpareigosenuo = '%s' WHERE vardas = '%e'", \
-			pInfo[id][dprizpareigosenuo], playerName[id]);
-		mysql_tquery(connectionHandle, query, "SendQuery", "");
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
 	return 1;
@@ -1860,7 +2010,7 @@ function Skirtidprizaoff(playerid, name[])
 		if(dprizas == 1) return MSG(playerid, RED, "- Þaidëjas jau turi direktoriø priþiûrëtojaus statusà!");
 		if(!isnull(DPRIZINFO[prizvardas])) return MSG(playerid, RED, "- Direktoriø priþiûrëtojas jau iðrinktas");
 
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET dpriziuretojas = '1', dprizpareigosenuo = '%s' WHERE vardas = '%e'", GautiData(0), name);
+		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '3', prizpareigosenuo = '%s', prizisp = '0' WHERE vardas = '%e'", GautiData(0), name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE dpriz SET prizpareigosenuo = '%s', vardas = '%e'", GautiData(0), name);
@@ -1877,7 +2027,7 @@ function Skirtidprizaoff(playerid, name[])
 
 YCMD:aispeti(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][adminpriz] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == ADMINPRIZIURETOJAS)
 	{
 		new id, reason[25];
 		if(sscanf(params, "us[25]", id, reason)) return MSG(playerid, 0x00B8D8AA, "• Áspëti administratoriø: /aispeti [Dalis vardo/ID] [Prieþastis]");
@@ -1921,7 +2071,7 @@ YCMD:aispeti(playerid, params[], help)
 
 YCMD:nuispvip(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][vippriz] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == VIPPRIZIURETOJAS)
 	{
 		new id, priezastis[31];
 		if(sscanf(params, "us[30]", id, priezastis)) return MSG(playerid, 0x00B8D8AA, "• Nuimti áspëjimà V.I.P nariui: /nuispvip [Dalis vardo/ID][Prieþastis]");
@@ -1934,7 +2084,7 @@ YCMD:nuispvip(playerid, params[], help)
 		SendFormat(playerid, GREEN, "+ Nuëmëte áspëjimà V.I.P nariui %s dël %s", playerName[id], priezastis);
 
 		if(pInfo[playerid][ADMIN] == SAVININKAS){SendFormat(id, GREEN, "• Savininkas %s nuëmë jums V.I.P nario áspëjimà dël %s", playerName[playerid], priezastis);}
-		else if(pInfo[playerid][vippriz] == 1){SendFormat(id, GREEN, "• V.I.p priþiûrëtojas %s nuëmë jums V.I.P nario áspëjimà dël %s", playerName[playerid], priezastis);}
+		else if(pInfo[playerid][priziuretojas] == VIPPRIZIURETOJAS){SendFormat(id, GREEN, "• V.I.p priþiûrëtojas %s nuëmë jums V.I.P nario áspëjimà dël %s", playerName[playerid], priezastis);}
 		
 		pInfo[id][visp]--;
 	}
@@ -1944,7 +2094,7 @@ YCMD:nuispvip(playerid, params[], help)
 
 YCMD:nuispadmin(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][adminpriz] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == ADMINPRIZIURETOJAS)
 	{
 		new id, priezastis[31];
 		if(sscanf(params, "us[30]", id, priezastis)) return MSG(playerid, 0x00B8D8AA, "• Nuimti áspëjimà administratoriui: /nuispadmin [Dalis vardo/ID][Prieþastis]");
@@ -1957,7 +2107,7 @@ YCMD:nuispadmin(playerid, params[], help)
 		SendFormat(playerid, GREEN, "+ Nuëmëte áspëjimà administratoriui %s dël %s", playerName[id], priezastis);
 
 		if(pInfo[playerid][ADMIN] == SAVININKAS){SendFormat(id, GREEN, "• Savininkas %s nuëmë jums administratoriaus áspëjimà dël %s", playerName[playerid], priezastis);}
-		else if(pInfo[playerid][adminpriz] == 1){SendFormat(id, GREEN, "• Administratoriø priþiûrëtojas %s nuëmë jums administratoriaus áspëjimà dël %s", playerName[playerid], priezastis);}
+		else if(pInfo[playerid][priziuretojas] == ADMINPRIZIURETOJAS){SendFormat(id, GREEN, "• Administratoriø priþiûrëtojas %s nuëmë jums administratoriaus áspëjimà dël %s", playerName[playerid], priezastis);}
 		
 		pInfo[id][aisp]--;
 
@@ -1975,15 +2125,15 @@ YCMD:nuispunbanpriz(playerid, params[], help)
 		if(sscanf(params, "us[30]", id, priezastis)) return MSG(playerid, 0x00B8D8AA, "• Nuimti áspëjimà UNBAN priþiûrëtojui: /nuispunbanpriz [Dalis vardo/ID][Prieþastis]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, RED, "- Tokio þaidëjo nëra");
 		if(!online[id]) return MSG(playerid, 0xFF0000AA, "- Þaidëjas neprisijungæs!");
-		if(pInfo[id][unbanpriziuretojas] == 0) return MSG(playerid, 0xFF0000AA, "- Þaidëjas nëra UNBAN priþiûrëtojas!");
-		if(pInfo[id][unbanprizisp] == 0) return MSG(playerid, RED, "- UNBAN priþiûrëtojas neturi áspëjimø!");
+		if(pInfo[id][priziuretojas] != UNBANPRIZIURETOJAS) return MSG(playerid, 0xFF0000AA, "- Þaidëjas nëra UNBAN priþiûrëtojas!");
+		if(pInfo[id][priziuretojausisp] == 0) return MSG(playerid, RED, "- UNBAN priþiûrëtojas neturi áspëjimø!");
 		if(strlen(priezastis) > 30) return MSG(playerid, RED, "- Prieþastis negali bûti ilgesnë negu 30 simboliø");
 
 		SendFormat(playerid, GREEN, "+ Nuëmëte áspëjimà UNBAN priþiûrëtojui %s dël %s", playerName[id], priezastis);
 
 		SendFormat(id, GREEN, "• Savininkas %s nuëmë jums UNBAN priþiûrëtojaus áspëjimà dël %s", playerName[playerid], priezastis);
 		
-		pInfo[id][unbanprizisp]--;
+		pInfo[id][priziuretojausisp]--;
 
 		// Do logs for nuimti áspëjimà
 	}	
@@ -2004,7 +2154,7 @@ YCMD:nuispunbanprizoff(playerid, params[], help)
 
 		if(id != INVALID_PLAYER_ID) return MSG(playerid, RED, "- Þaidëjas prisijungæs");
 
-		mysql_format(connectionHandle, query, 180, "SELECT unbanpriziuretojas, unbanprizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_format(connectionHandle, query, 180, "SELECT priziuretojas, prizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "nuispunbanpriz_off", "iss", playerid, Vardas, priezastis);
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -2017,7 +2167,7 @@ function nuispunbanpriz_off(playerid, name[], reason[])
 	{
 		new unbanpriz_id, unbanprizo_isp;
 		cache_get_value_index_int(0, 0, unbanpriz_id);
-		if(unbanpriz_id == 0) return MSG(playerid, RED, "- Þaidëjas nëra UNBAN priþiûrëtojas");
+		if(unbanpriz_id != UNBANPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra UNBAN priþiûrëtojas");
 		cache_get_value_index_int(0, 1, unbanprizo_isp);
 
 		if(unbanprizo_isp == 0) return MSG(playerid, RED, "- Þaidëjas neturi UNBAN priþiûrëtojaus áspëjimø");
@@ -2026,7 +2176,7 @@ function nuispunbanpriz_off(playerid, name[], reason[])
 
 		SendFormat(playerid, GREEN, "+ Nuëmëte áspëjimà administratoriø priþiûrëtojui %s, dël %s, dabar jis turi %i áspëjimus(-à)", name, reason, unbanprizo_isp);
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET unbanprizisp = '%i' WHERE vardas = '%e'", unbanprizo_isp, name);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET prizisp = '%i' WHERE vardas = '%e'", unbanprizo_isp, name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 	}
 	else return MSG(playerid, RED, "- Tokio þaidëjo nëra duomenø bazëje");
@@ -2042,15 +2192,15 @@ YCMD:nuispapriz(playerid, params[], help)
 		if(sscanf(params, "us[30]", id, priezastis)) return MSG(playerid, 0x00B8D8AA, "• Nuimti áspëjimà administratoriø priþiûrëtojui: /nuispapriz [Dalis vardo/ID][Prieþastis]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, RED, "- Tokio þaidëjo nëra");
 		if(!online[id]) return MSG(playerid, 0xFF0000AA, "- Þaidëjas neprisijungæs!");
-		if(pInfo[id][adminpriz] == 0) return MSG(playerid, 0xFF0000AA, "- Þaidëjas nëra administratoriø priþiûrëtojas!");
-		if(pInfo[id][adminprizisp] == 0) return MSG(playerid, RED, "- Administratoriø priþiûrëtojas neturi áspëjimø!");
+		if(pInfo[id][priziuretojas] == ADMINPRIZIURETOJAS) return MSG(playerid, 0xFF0000AA, "- Þaidëjas nëra administratoriø priþiûrëtojas!");
+		if(pInfo[id][priziuretojausisp] == 0) return MSG(playerid, RED, "- Administratoriø priþiûrëtojas neturi áspëjimø!");
 		if(strlen(priezastis) > 30) return MSG(playerid, RED, "- Prieþastis negali bûti ilgesnë negu 30 simboliø");
 
 		SendFormat(playerid, GREEN, "+ Nuëmëte áspëjimà administratoriø priþiûrëtojui %s dël %s", playerName[id], priezastis);
 
 		SendFormat(id, GREEN, "• Savininkas %s nuëmë jums administratoriaus áspëjimà dël %s", playerName[playerid], priezastis);
 		
-		pInfo[id][adminprizisp]--;
+		pInfo[id][priziuretojausisp]--;
 
 		// Do logs for nuimti áspëjimà
 	}	
@@ -2070,7 +2220,7 @@ YCMD:nuispaprizoff(playerid, params[], help)
 
 		if(id != INVALID_PLAYER_ID) return MSG(playerid, RED, "- Þaidëjas prisijungæs");
 
-		mysql_format(connectionHandle, query, 180, "SELECT adminpriz, adminprizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_format(connectionHandle, query, 180, "SELECT priziuretojas, prizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "nuispadminpriz_off", "iss", playerid, Vardas, priezastis);
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -2083,7 +2233,7 @@ function nuispadminpriz_off(playerid, name[], reason[])
 	{
 		new adminpriz_id, adminpriz_isp;
 		cache_get_value_index_int(0, 0, adminpriz_id);
-		if(adminpriz_id == 0) return MSG(playerid, RED, "- Þaidëjas nëra administratoriø priþiûrëtojas");
+		if(adminpriz_id == 0 || adminpriz_id != ADMINPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra administratoriø priþiûrëtojas");
 		cache_get_value_index_int(0, 1, adminpriz_isp);
 
 		if(adminpriz_isp == 0) return MSG(playerid, RED, "- Þaidëjas neturi administratoriaus priþiûrëtojaus áspëjimø");
@@ -2092,7 +2242,7 @@ function nuispadminpriz_off(playerid, name[], reason[])
 
 		SendFormat(playerid, GREEN, "+ Nuëmëte áspëjimà administratoriø priþiûrëtojui %s, dël %s, dabar jis turi %i áspëjimus(-à)", name, reason, adminpriz_isp);
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET adminprizisp = '%i' WHERE vardas = '%e'", adminpriz_isp, name);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET prizisp = '%i' WHERE vardas = '%e'", adminpriz_isp, name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 	}
 	else return MSG(playerid, RED, "- Tokio þaidëjo nëra duomenø bazëje");
@@ -2101,7 +2251,7 @@ function nuispadminpriz_off(playerid, name[], reason[])
 
 YCMD:nuispvipoff(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][vippriz] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == VIPPRIZIURETOJAS)
 	{
 		new id, Vardas[MAX_PLAYER_NAME], priezastis[31];
 		if(sscanf(params, "s[24]s[30]", Vardas, priezastis)) return MSG(playerid, 0x00B8D8AA, "• Nuimti áspëjimà atsijungusiam V.I.P nariui: /nuispvipoff [Dalis vardo/ID][Prieþastis]");
@@ -2144,7 +2294,7 @@ function OnNuispAdminOff(playerid, name[], reason[])
 
 YCMD:nuispadminoff(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][adminpriz] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == ADMINPRIZIURETOJAS)
 	{
 		new id, Vardas[MAX_PLAYER_NAME], priezastis[31];
 		if(sscanf(params, "s[24]s[30]", Vardas, priezastis)) return MSG(playerid, 0x00B8D8AA, "• Nuimti áspëjimà atsijungusiam administratoriui: /nuispadminoff [Dalis vardo/ID][Prieþastis]");
@@ -2194,16 +2344,16 @@ YCMD:nuispvippriz(playerid, params[], help)
 		if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Nuimti áspëjimà V.I.P priþiûrëtojui: /nuispvippriz [Dalis vardo/ID]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, RED, "- Tokio þaidëjo nëra");
 		if(!online[id]) return MSG(playerid, 0xFF0000AA, "- Þaidëjas neprisijungæs!");
-		if(pInfo[id][vippriz] == 0) return MSG(playerid, 0xFF0000AA, "- Þaidëjas nëra V.I.P priþiûrëtojas!");
-		if(pInfo[id][vipprizisp] == 0) return MSG(playerid, RED, "- V.I.P priþiûrëtojas neturi áspëjimø!");
+		if(pInfo[id][priziuretojas] != VIPPRIZIURETOJAS) return MSG(playerid, 0xFF0000AA, "- Þaidëjas nëra V.I.P priþiûrëtojas!");
+		if(pInfo[id][priziuretojausisp] == 0) return MSG(playerid, RED, "- V.I.P priþiûrëtojas neturi áspëjimø!");
 
 		SendFormat(playerid, GREEN, "+ Nuëmëte áspëjimà V.I.P priþiûrëtojui %s", playerName[id]);
 
 		SendFormat(id, GREEN, "• Savininkas %s nuëmë jums V.I.P priþiûrëtojaus áspëjimà", playerName[playerid]);
 		
-		pInfo[id][vipprizisp]--;
+		pInfo[id][priziuretojausisp]--;
 
-		mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizisp = '%i' WHERE vardas = '%e'", pInfo[id][vipprizisp], playerName[id]);
+		mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizisp = '%i' WHERE vardas = '%e'", pInfo[id][priziuretojausisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", ""); 
 	}	
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -2221,7 +2371,7 @@ YCMD:nuispvipprizoff(playerid, params[], help)
 
 		if(id != INVALID_PLAYER_ID) return MSG(playerid, RED, "- Þaidëjas prisijungæs");
 
-		mysql_format(connectionHandle, query, 180, "SELECT vippriz, vipprizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_format(connectionHandle, query, 180, "SELECT priziuretojas, prizisp FROM zaidejai WHERE vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "nuispvippriz_off", "is", playerid, Vardas);
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -2232,7 +2382,7 @@ function nuispvippriz_off(playerid, name[])
 {
 	new vippriz_id, vippriz_isp;
 	cache_get_value_index_int(0, 0, vippriz_id);
-	if(vippriz_id == 0) return MSG(playerid, RED, "- Þaidëjas nëra V.I.P priþiûrëtojas");
+	if(vippriz_id == 0 || vippriz_id != VIPPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra V.I.P priþiûrëtojas");
 
 	cache_get_value_index_int(0, 1, vippriz_isp);
 
@@ -2242,7 +2392,7 @@ function nuispvippriz_off(playerid, name[])
 
 	SendFormat(playerid, GREEN, "+ Nuëmëte áspëjimà V.I.P priþiûrëtojui %s, dabar jis turi %i áspëjimus(-à)", name, vippriz_isp);
 
-	mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET vipprizisp = '%i' WHERE vardas = '%e'", vippriz_isp, name);
+	mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET prizisp = '%i' WHERE vardas = '%e'", vippriz_isp, name);
 	mysql_tquery(connectionHandle, query, "SendQuery", ""); 
 
 	mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizisp = '%i' WHERE vardas = '%e'", vippriz_isp, name);
@@ -2261,9 +2411,9 @@ YCMD:ispetivippriz(playerid, params[], help)
 		if(strlen(reason) > 24) return MSG(playerid, RED, "- Prieþastis negali bûti ilgesnë nei 24 simboliai");
 		if(pInfo[id][ADMIN] == SAVININKAS || pInfo[id][ADMIN] == KOMANDOSNARIAI) return MSG(playerid, 0xFF0000FF, "- LERG Komandos negalite áspëti!");
 		if(strlen(reason) <= 4) return MSG(playerid, RED, "- Prieþastis negali bûti trumpesnë nei 5 simboliai");
-		if(pInfo[id][vippriz] == 0) return MSG(playerid, RED, "- Þaidëjas nëra V.I.P priþiûrëtojas!");
+		if(pInfo[id][priziuretojas] != VIPPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra V.I.P priþiûrëtojas!");
 
-		pInfo[id][vipprizisp] += 1;
+		pInfo[id][priziuretojausisp] += 1;
 
 		
 		// 1 vip
@@ -2285,15 +2435,15 @@ YCMD:ispetivippriz(playerid, params[], help)
 
 		
 		mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizisp = '%i' WHERE vardas = '%e'", \
-			pInfo[id][vipprizisp], playerName[id]);
+			pInfo[id][priziuretojausisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", ""); 
 
 
-		if(pInfo[id][vipprizisp] >= 3)
+		if(pInfo[id][priziuretojausisp] >= 3)
 		{
 			SendFormat(playerid, GREEN, "• V.I.P priþiûrëtojas %s áspëtas dël: %s, jis surinko tris áspëjimus ir nebëra priþiûrëtojas!", playerName[id], reason);
-			pInfo[id][vipprizisp] = 0;
-			pInfo[id][vippriz] = 0;
+			pInfo[id][priziuretojausisp] = 0;
+			pInfo[id][priziuretojas] = 0;
 
 			VIPPRIZINFO[prizvardas] = EOS;
 			VIPPRIZINFO[prizpareigosenuo] = EOS;
@@ -2304,17 +2454,17 @@ YCMD:ispetivippriz(playerid, params[], help)
 			SetPlayerColor(id, DEFAULT_COLOR);
 
 			mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '' WHERE vardas = '%e'", \
-				pInfo[id][vipprizpareigosenuo], playerName[id]);
+				pInfo[id][prizpareigosenuo], playerName[id]);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET vippriz = '0', vipprizisp = '0', vipprizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
+			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		}
-		else if(pInfo[id][vipprizisp] < 3)
+		else if(pInfo[id][priziuretojausisp] < 3)
 		{
-			SendFormat(playerid, GREEN, "+ Priþiûrëtojas %s áspëtas dël: %s, dabar jis turi %i áspëjimus", playerName[id], reason, pInfo[id][vipprizisp]);
-			SendFormat(id, GREEN, "+ Savininkas %s áspëjo jus dël: %s, dabar jûs turite %i áspëjimus", playerName[playerid], reason, pInfo[id][vipprizisp]);
+			SendFormat(playerid, GREEN, "+ Priþiûrëtojas %s áspëtas dël: %s, dabar jis turi %i áspëjimus", playerName[id], reason, pInfo[id][priziuretojausisp]);
+			SendFormat(id, GREEN, "+ Savininkas %s áspëjo jus dël: %s, dabar jûs turite %i áspëjimus", playerName[playerid], reason, pInfo[id][priziuretojausisp]);
 			MSG(id, -1, "{ffd700}• Daugiau informacijos /priezastys");
 		}
 	}
@@ -2333,9 +2483,9 @@ YCMD:ispetiapriz(playerid, params[], help)
 		if(strlen(reason) > 24) return MSG(playerid, RED, "- Prieþastis negali bûti ilgesnë nei 24 simboliai");
 		if(pInfo[id][ADMIN] == SAVININKAS || pInfo[id][ADMIN] == KOMANDOSNARIAI) return MSG(playerid, 0xFF0000FF, "- LERG Komandos negalite áspëti!");
 		if(strlen(reason) <= 4) return MSG(playerid, RED, "- Prieþastis negali bûti trumpesnë nei 4 simboliai");
-		if(pInfo[id][adminpriz] == 0) return MSG(playerid, RED, "- Þaidëjas nëra V.I.P priþiûrëtojas!");
+		if(pInfo[id][priziuretojas] != ADMINPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra administratoriø priþiûrëtojas!");
 
-		pInfo[id][adminprizisp] += 1;
+		pInfo[id][priziuretojausisp] += 1;
 
 		
 		// 1 vip
@@ -2357,15 +2507,15 @@ YCMD:ispetiapriz(playerid, params[], help)
 
 		
 		mysql_format(connectionHandle, query, 140, "UPDATE admin_priz SET prizisp = '%i' WHERE vardas = '%e'", \
-			pInfo[id][adminprizisp], playerName[id]);
+			pInfo[id][priziuretojausisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", ""); 
 
 
-		if(pInfo[id][adminprizisp] >= 3)
+		if(pInfo[id][priziuretojausisp] >= 3)
 		{
 			SendFormat(playerid, GREEN, "• Administratoriø priþiûrëtojas %s áspëtas dël: %s, jis surinko tris áspëjimus ir nebëra priþiûrëtojas!", playerName[id], reason);
-			pInfo[id][adminprizisp] = 0;
-			pInfo[id][adminpriz] = 0;
+			pInfo[id][priziuretojausisp] = 0;
+			pInfo[id][priziuretojas] = 0;
 
 			ADMINPRIZINFO[prizvardas] = EOS;
 			ADMINPRIZINFO[prizpareigosenuo] = EOS;
@@ -2376,17 +2526,17 @@ YCMD:ispetiapriz(playerid, params[], help)
 			SetPlayerColor(id, DEFAULT_COLOR);
 
 			mysql_format(connectionHandle, query, 140, "UPDATE admin_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '' WHERE vardas = '%e'", \
-				pInfo[id][aprizpareigosenuo], playerName[id]);
+				pInfo[id][prizpareigosenuo], playerName[id]);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET adminpriz = '0', adminprizisp = '0', aprizpareigosenuO = '' WHERE vardas = '%e'", playerName[id]);
+			mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		}
-		else if(pInfo[id][adminprizisp] < 3)
+		else if(pInfo[id][priziuretojausisp] < 3)
 		{
-			SendFormat(playerid, GREEN, "+ Priþiûrëtojas %s áspëtas dël: %s, dabar jis turi %i áspëjimus", playerName[id], reason, pInfo[id][adminprizisp]);
-			SendFormat(id, GREEN, "+ Savininkas %s áspëjo jus dël: %s, dabar jûs turite %i áspëjimus", playerName[playerid], reason, pInfo[id][adminprizisp]);
+			SendFormat(playerid, GREEN, "+ Priþiûrëtojas %s áspëtas dël: %s, dabar jis turi %i áspëjimus", playerName[id], reason, pInfo[id][priziuretojausisp]);
+			SendFormat(id, GREEN, "+ Savininkas %s áspëjo jus dël: %s, dabar jûs turite %i áspëjimus", playerName[playerid], reason, pInfo[id][priziuretojausisp]);
 			MSG(id, -1, "{ffd700}• Daugiau informacijos /priezastys");
 		}
 	}
@@ -2446,7 +2596,7 @@ YCMD:atsisakytidpriz(playerid, params[], help)
 {
 	new reason[30];
 	if(sscanf(params, "s[30]", reason)) return MSG(playerid, 0x00B8D8AA, "• Atsisakyti direktoriø priþiûrëtojaus: /atsisakytidpriz [Prieþastis] (MAX 30 simboliø)");
-	if(pInfo[playerid][dpriziuretojas] == 0) return MSG(playerid, RED, "- Jûs nesate direktoriø priþiûrëtojas");
+	if(pInfo[playerid][priziuretojas] != DPRIZIURETOJAS) return MSG(playerid, RED, "- Jûs nesate direktoriø priþiûrëtojas");
 
 	if(strlen(reason) > 30 || strlen(reason) < 4) return MSG(playerid, RED, "- Prieþastis negali bûti ilgesnë nei 30 simboliø ir trumpesnë nei 4 simboliai!");
 
@@ -2460,8 +2610,8 @@ YCMD:atsisakytidpriz(playerid, params[], help)
 	DPRIZINFO[prizpareigosenuo] = EOS;
 	DPRIZINFO[prizisp] = 0;
 
-	pInfo[playerid][dpriziuretojas] = 0;
-	pInfo[playerid][dprizisp] = 0;
+	pInfo[playerid][priziuretojas] = 0;
+	pInfo[playerid][priziuretojausisp] = 0;
 	return 1;
 }
 
@@ -2469,7 +2619,7 @@ YCMD:atsisakytivpriz(playerid, params[], help)
 {
 	new reason[30];
 	if(sscanf(params, "s[30]", reason)) return MSG(playerid, 0x00B8D8AA, "• Atsisakyti V.I.P nariø priþiûrëtojaus: /atsisakytivpriz [Prieþastis] (MAX 30 simboliø)");
-	if(pInfo[playerid][vippriz] == 0) return MSG(playerid, RED, "- Jûs nesate direktoriø priþiûrëtojas");
+	if(pInfo[playerid][priziuretojas] != VIPPRIZIURETOJAS) return MSG(playerid, RED, "- Jûs nesate V.I.P priþiûrëtojas");
 
 	if(strlen(reason) > 30 || strlen(reason) < 4) return MSG(playerid, RED, "- Prieþastis negali bûti ilgesnë nei 30 simboliø ir trumpesnë nei 4 simboliai!");
 
@@ -2483,8 +2633,8 @@ YCMD:atsisakytivpriz(playerid, params[], help)
 	VIPPRIZINFO[prizpareigosenuo] = EOS;
 	VIPPRIZINFO[prizisp] = 0;
 
-	pInfo[playerid][vippriz] = 0;
-	pInfo[playerid][vipprizisp] = 0;
+	pInfo[playerid][priziuretojas] = 0;
+	pInfo[playerid][priziuretojausisp] = 0;
 	return 1;
 }
 
@@ -2492,7 +2642,7 @@ YCMD:atsisakytiadminpriz(playerid, params[], help)
 {
 	new reason[30];
 	if(sscanf(params, "s[30]", reason)) return MSG(playerid, 0x00B8D8AA, "• Atsisakyti administratoriø priþiûrëtojaus: /atsisakytiadminpriz [Prieþastis] (MAX 30 simboliø)");
-	if(pInfo[playerid][adminpriz] == 0) return MSG(playerid, RED, "- Jûs nesate direktoriø priþiûrëtojas");
+	if(pInfo[playerid][priziuretojas] != ADMINPRIZIURETOJAS) return MSG(playerid, RED, "- Jûs nesate administratoriø priþiûrëtojas");
 
 	if(strlen(reason) > 30 || strlen(reason) < 4) return MSG(playerid, RED, "- Prieþastis negali bûti ilgesnë nei 30 simboliø ir trumpesnë nei 4 simboliai!");
 
@@ -2506,8 +2656,8 @@ YCMD:atsisakytiadminpriz(playerid, params[], help)
 	ADMINPRIZINFO[prizpareigosenuo] = EOS;
 	ADMINPRIZINFO[prizisp] = 0;
 
-	pInfo[playerid][adminpriz] = 0;
-	pInfo[playerid][adminprizisp] = 0;
+	pInfo[playerid][priziuretojas] = 0;
+	pInfo[playerid][priziuretojausisp] = 0;
 	return 1;
 }
 
@@ -2515,7 +2665,7 @@ YCMD:atsisakytiunbanpriz(playerid, params[], help)
 {
 	new reason[30];
 	if(sscanf(params, "s[30]", reason)) return MSG(playerid, 0x00B8D8AA, "• Atsisakyti UNBAN priþiûrëtojaus: /atsisakytiunbanpriz [Prieþastis] (MAX 30 simboliø)");
-	if(pInfo[playerid][unbanpriziuretojas] == 0) return MSG(playerid, RED, "- Jûs nesate UNBAN priþiûrëtojas");
+	if(pInfo[playerid][priziuretojas] != UNBANPRIZIURETOJAS) return MSG(playerid, RED, "- Jûs nesate UNBAN priþiûrëtojas");
 
 	if(strlen(reason) > 30 || strlen(reason) < 4) return MSG(playerid, RED, "- Prieþastis negali bûti ilgesnë nei 30 simboliø ir trumpesnë nei 4 simboliai!");
 
@@ -2529,8 +2679,8 @@ YCMD:atsisakytiunbanpriz(playerid, params[], help)
 	UNBANPRIZ_INFO[prizpareigosenuo] = EOS;
 	UNBANPRIZ_INFO[prizisp] = 0;
 
-	pInfo[playerid][unbanpriziuretojas] = 0;
-	pInfo[playerid][unbanprizisp] = 0;
+	pInfo[playerid][priziuretojas] = 0;
+	pInfo[playerid][priziuretojausisp] = 0;
 	return 1;
 }
 
@@ -2546,7 +2696,7 @@ YCMD:skirtivipprizoff(playerid, params[], help)
 	if(id != INVALID_PLAYER_ID) return MSG(playerid, RED, "- Þaidëjas prisijungæs");
 	if(!IsValidNickName(Vardas)) return MSG(playerid, RED, "- Netinkama vardo forma. Tinkama vardo forma: Vardas_Pavarde");
 
-	mysql_format(connectionHandle, query, 140, "SELECT vippriz FROM zaidejai WHERE vardas = '%e'", Vardas);
+	mysql_format(connectionHandle, query, 140, "SELECT priziuretojas FROM zaidejai WHERE vardas = '%e'", Vardas);
 	mysql_tquery(connectionHandle, query, "OnSkirtivipprizoff", "is", playerid, Vardas);
 
 	return 1;
@@ -2564,7 +2714,7 @@ YCMD:skirtiadminprizoff(playerid, params[], help)
 	if(id != INVALID_PLAYER_ID) return MSG(playerid, RED, "- Þaidëjas prisijungæs");
 	if(!IsValidNickName(Vardas)) return MSG(playerid, RED, "- Netinkama vardo forma. Tinkama vardo forma: Vardas_Pavarde");
 
-	mysql_format(connectionHandle, query, 140, "SELECT adminpriz FROM zaidejai WHERE vardas = '%e'", Vardas);
+	mysql_format(connectionHandle, query, 140, "SELECT priziuretojas FROM zaidejai WHERE vardas = '%e'", Vardas);
 	mysql_tquery(connectionHandle, query, "OnSkirtiadminprizoff", "is", playerid, Vardas);
 
 	return 1;
@@ -2618,9 +2768,10 @@ function OnSkirtiadminprizoff(playerid, name[])
 		new isadminpriz;
 		cache_get_value_index_int(0,0, isadminpriz);
 
-		if(isadminpriz == 1) return MSG(playerid, RED, "- Þaidëjas jau administratoriø priþiûrëtojas");
+		if(isadminpriz == ADMINPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas jau administratoriø priþiûrëtojas");
+		if(isadminpriz > 0 || isadminpriz != ADMINPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas jau yra priþiûrëtojas");
 
-		mysql_format(connectionHandle, query, 144, "UPDATE zaidejai SET adminpriz = '1', adminprizisp = '0', aprizpareigosenuo = '%s' WHERE vardas = '%e'", GautiData(0), name);
+		mysql_format(connectionHandle, query, 144, "UPDATE zaidejai SET priziuretojas = '2', prizisp = '0', prizpareigosenuo = '%s' WHERE vardas = '%e'", GautiData(0), name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE admin_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '%e'", GautiData(0), name);
@@ -2639,9 +2790,9 @@ function OnSkirtivipprizoff(playerid, name[])
 		new isvippriz;
 		cache_get_value_index_int(0,0, isvippriz);
 
-		if(isvippriz == 1) return MSG(playerid, RED, "- Þaidëjas jau VIP priþiûrëtojas");
+		if(isvippriz == VIPPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas jau VIP priþiûrëtojas");
 
-		mysql_format(connectionHandle, query, 144, "UPDATE zaidejai SET vippriz = '1', vipprizisp = '0', vipprizpareigosenuo = '%s' WHERE vardas = '%e'", GautiData(0), name);
+		mysql_format(connectionHandle, query, 144, "UPDATE zaidejai SET priziuretojas = '1', prizisp = '0', prizpareigosenuo = '%s' WHERE vardas = '%e'", GautiData(0), name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 		
 		mysql_format(connectionHandle, query, 140, "UPDATE admin_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '%e'", GautiData(0), name);
@@ -2720,7 +2871,7 @@ YCMD:dkomandos(playerid, params[], help)
 	{
 		new list[1000];
 		strcat(list, "\t{CF9F94}Direktoriaus komandos\n\n{CF9F94}/d{ffffff} - skelbti praneðimà vieðai\n{CF9F94}/nepaememin{ffffff} - nepaëminusiø darbuotojø dienos minimalaus reikalavimo sàraðas");
-		strcat(list, "\n{CF9F94}/atsisakytidrk{ffffff} - atsisakyti direktoriaus pareigø\n{CF9F94}/dvp - direktoriaus valdymo panelë\n{CF9F94}/dpzu{ffffff} - stebëti darbuotojà\n{CF9F94}/darboinfo{ffffff} - darbo informacija");
+		strcat(list, "\n{CF9F94}/atsisakytidrk{ffffff} - atsisakyti direktoriaus pareigø\n{CF9F94}/dvp{ffffff} - direktoriaus valdymo panelë\n{CF9F94}/dpzu{ffffff} - stebëti darbuotojà\n{CF9F94}/darboinfo{ffffff} - darbo informacija");
 		ShowPlayerDialog(playerid, drkkomandos, DIALOG_STYLE_MSGBOX, "{ffffff}Direktoriaus komandos", list, "Supratau", "");
 	}
 	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
@@ -2751,7 +2902,7 @@ YCMD:akomandos(playerid, params[], help)
 
 YCMD:pskelbti(playerid, params[], help)
 {
-	if(!IsPriziuretojas(playerid)) return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	if(pInfo[playerid][priziuretojas] == 0) return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
 
 	new msg[110];
 	
@@ -2759,10 +2910,10 @@ YCMD:pskelbti(playerid, params[], help)
 
 	if(pInfo[playerid][prizskelbti] > gettime()) return MSG(playerid, RED, "- Skelbti praneðimà galite tik kas 5 minutes!");
 
-	if(pInfo[playerid][adminpriz] == 1 && pInfo[playerid][vippriz] == 0 && pInfo[playerid][dpriziuretojas] == 0 && pInfo[playerid][unbanpriziuretojas] == 0){SendFormatToAll(-1, "{05c54e}Administratoriø priþiûrëtojas {67ab04}%s(%i){05c54e}: %s", playerName[playerid], playerid, msg);}
-	else if(pInfo[playerid][vippriz] == 1 && pInfo[playerid][adminpriz] == 0 && pInfo[playerid][dpriziuretojas] == 0 && pInfo[playerid][unbanpriziuretojas] == 0){SendFormatToAll(-1, "{05c54e}VIP nariø priþiûrëtojas {67ab04}%s(%i){05c54e}: %s", playerName[playerid], playerid, msg);}
-	else if(pInfo[playerid][vippriz] == 0 && pInfo[playerid][adminpriz] == 0 && pInfo[playerid][unbanpriziuretojas] == 0 && pInfo[playerid][dpriziuretojas] == 1) {SendFormatToAll(-1, "{05c54e}Direktoriø priþiûrëtojas {67ab04}%s(%i){05c54e}: %s", playerName[playerid], playerid, msg);}
-	else if(pInfo[playerid][vippriz] == 0 && pInfo[playerid][adminpriz] == 0 && pInfo[playerid][dpriziuretojas] == 0 && pInfo[playerid][unbanpriziuretojas] == 1){SendFormatToAll(-1, "{05c54e}UNBAN priþiûrëtojas {67ab04}%s(%i){05c54e}: %s", playerName[playerid], playerid, msg);}
+	if(pInfo[playerid][priziuretojas] == ADMINPRIZIURETOJAS){SendFormatToAll(-1, "{05c54e}Administratoriø priþiûrëtojas {67ab04}%s(%i){05c54e}: %s", playerName[playerid], playerid, msg);}
+	else if(pInfo[playerid][priziuretojas] == VIPPRIZIURETOJAS){SendFormatToAll(-1, "{05c54e}VIP nariø priþiûrëtojas {67ab04}%s(%i){05c54e}: %s", playerName[playerid], playerid, msg);}
+	else if(pInfo[playerid][priziuretojas] == DPRIZIURETOJAS) {SendFormatToAll(-1, "{05c54e}Direktoriø priþiûrëtojas {67ab04}%s(%i){05c54e}: %s", playerName[playerid], playerid, msg);}
+	else if(pInfo[playerid][priziuretojas] == UNBANPRIZIURETOJAS){SendFormatToAll(-1, "{05c54e}UNBAN priþiûrëtojas {67ab04}%s(%i){05c54e}: %s", playerName[playerid], playerid, msg);}
 	pInfo[playerid][prizskelbti] = gettime() + 300; // 5min
 
 	return 1;
@@ -2795,6 +2946,36 @@ YCMD:s(playerid, params[], help)
 	return 1;
 }
 
+YCMD:spygliai(playerid, params[], help)
+{
+	if(IsJobFromLaw(pInfo[playerid][darbas]))
+	{
+		switch(SpygliaiInfo[playerid][arPadeti])
+		{
+			case true:
+			{
+				GameTextForPlayer(playerid, "~r~SPYGLIAI NUIMTI", 3000, 3);
+				DestroyDynamicObject(SpygliaiInfo[playerid][SpygliuObj]);
+				MSG(playerid, RED, "- Spygliai nuimti");
+				SpygliaiInfo[playerid][arPadeti] = false;
+				Delete3DTextLabel(SpygliaiInfo[playerid][SpygliuText]);
+			}
+			case false:
+			{
+                new Float:Cords[4];
+                GetPlayerPos(playerid, Cords[0], Cords[1], Cords[2]);
+                GetPlayerFacingAngle(playerid, Cords[3]);
+                CreateSpikes(playerid,Cords[0], Cords[1] - 2.0, Cords[2] - 0.85, Cords[3], GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid));
+                GameTextForPlayer(playerid, "~g~SPYGLIAI PADETI", 3000, 3);
+                MSG(playerid, GREEN, "+ Spygliai padëti");
+                SpygliaiInfo[playerid][arPadeti] = true;
+			}
+		}
+	}
+	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
+	return 1;
+}
+
 YCMD:liemene(playerid, params[], help)
 {
 	if(IsJobFromLaw(pInfo[playerid][darbas]))
@@ -2816,10 +2997,22 @@ YCMD:vierhutazeris(playerid, params[], help) // Testinimui
 	return 1;
 }
 
+YCMD:koordinates(playerid, params[], help)
+{
+	new Float:coords[3];
+
+	GetPlayerPos(playerid, coords[0], coords[1], coords[2]);
+
+	SendFormat(playerid, -1, "X: %s", coords[0]);
+	SendFormat(playerid, -1, "Y: %s", coords[1]);
+	SendFormat(playerid, -1, "Z: %s", coords[2]);
+	return 1;
+}
+
 YCMD:vaziuoju(playerid, params[], help)
 {
 	new id, Float:cords[3];
-	if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Vaþiuoti á iðkvietimà: /vaziuoju [Vardas_Pavardë]");
+	if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Vaþiuoti á iðkvietimà: /vaziuoju [Vardas_Pavardë/ID]");
 	if(!IsPlayerInAnyVehicle(playerid)) return MSG(playerid, 0xFF0000AA, "- Turite bûti tr. priemonëje");
 	if(!IsPlayerConnected(id)) return MSG(playerid, RED, "- Þaidëjas atsijungæs");
 	if(id == playerid) return MSG(playerid, RED, "- Pas save vykti negalite!");
@@ -2932,6 +3125,9 @@ function OnPlayerRequestWarnings(playerid)
 			}
 			else if(isptipas == 8){
 				type = "UNBAN priþ";
+			}
+			else if(isptipas == 9){
+				type = "Savininkas";
 			}
 			format(str, sizeof(str), "{2e8b57}%i. %s áspëjimas | %s | %s | %s\n", count, type, data, priezastis, kasIspejo);
 			strcat(string, str);
@@ -3066,6 +3262,7 @@ YCMD:ant(playerid, params[], help)
 				SetPlayerSpecialAction(id, SPECIAL_ACTION_NONE);
 				RemovePlayerAttachedObject(id, 0);
 				TogglePlayerControllable(id, true);
+				ClearAnimations(id);
 				SendFormat(id, -1, "%s atrakino jus", playerName[playerid]);
 				SendFormat(playerid, -1, "Atrakinote %s", playerName[id]);
 			}
@@ -3076,12 +3273,88 @@ YCMD:ant(playerid, params[], help)
 	return 1;
 }
 
+YCMD:ita(playerid, params[], help)
+{
+	if(IsJobFromLaw(pInfo[playerid][darbas]))
+	{
+		new id;
+		if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Átarti þaidëjà: /ita [Dalis vardo/ID]");
+		if(pInfo[playerid][Spectatina]) return MSG(playerid, RED, "- Jûs stebëjimo reþime!");
+		
+		if(IsPlayerConnected(id) && online[id])
+		{
+			// if(playerid == id) return MSG(playerid, RED, "- Savæs átarti negalite");
+
+			new Float:cords[3];
+			GetPlayerPos(id, cords[0], cords[1], cords[2]);
+			if(IsPlayerInRangeOfPoint(playerid, 10, cords[0], cords[1], cords[2]))
+			{
+				pInfo[playerid][PasirinktasZaidejas] = id;
+				new fBuffer[2000], zBuffer[1000], itariamas_zaidejas[50];
+				for(new i = 0; i < MAX_ITA; i++)
+				{
+					format(zBuffer, sizeof(zBuffer), "%s\t \t \t{ffffff}%s\n", itarimai[i][itarimo_vardas], itarimai[i][itarimo_bausmes_vardas]);
+					strcat(fBuffer, zBuffer);
+				}
+				format(itariamas_zaidejas, sizeof(itariamas_zaidejas), "» Átariamas þaidëjas %s", pInfo[playerid][PasirinktasZaidejas]);
+				inline itarti_zaideja(pid, did, resp, litem, string:input[])
+				{
+					id = pInfo[playerid][PasirinktasZaidejas];
+					#pragma unused pid, did, input
+
+					if(resp)
+					{
+						new itaReason[120];
+
+						format(itaReason, sizeof itaReason, "%s", itarimai[litem][itarimo_vardas]);
+
+						if(strfind(itaReason, "{8C6547}»{ffffff}") != -1)
+							strreplace(itaReason, "{8C6547}»{ffffff}", "");
+						switch(litem)
+						{
+							case 0..7:
+							{
+								SendFormatToJob(POLICININKAI, -1, "{f49e42}[RACIJA]: %s(%i): Iðraðiau %s(%i) administracinæ baudà", playerName[playerid], playerid, playerName[id], id);
+								SendFormatToJob(POLICININKAI, -1, "\t{f49e42}» Prieþastis: %s | Bauda: %s€", itaReason, konvertuoti_pinigus(itarimai[litem][baudoskiekis_adm]));
+
+								mysql_format(connectionHandle, query, 300, "INSERT INTO `zaideju_baudos_administracines` (`baudosvardas`, `kamskirta`, `kasisrase`, `kadaisrase`, `baudos_suma`) VALUES ('%s', '%s', '%s', '%s', '%i')", \
+									itaReason, playerName[id], playerName[playerid], GautiData(0), itarimai[litem][baudoskiekis_adm]);
+								mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+								pInfo[id][VairavimoNuobauduTaskai] += itarimai[litem][vairavimotaskai]; // Vairavimo taðkai uþ nuobaudà.
+								SendFormat(id, GREEN, "+ Pareigûnas %s(%i) iðraðë jums administracine baudà uþ %s (%s€)", playerName[playerid], playerid, itaReason, konvertuoti_pinigus(itarimai[litem][baudoskiekis_adm]));
+								MSG(id, GREEN, "+ Jà galite susimokëti policijos komisariate. Turimos baudos: /baudos");
+								SendFormat(playerid, GREEN, "+ Iðraðëte %s(%i) administracine baudà uþ %s (%s€)", playerName[id], id, itaReason, konvertuoti_pinigus(itarimai[litem][baudoskiekis_adm]));
+
+								//Tikrinti jeigu >= 100 tai praneðti darbuotojui, jog atimtø teises.
+							}
+							case 8..24:
+							{
+								SendFormatToJob(POLICININKAI, -1, "{f49e42}[RACIJA]: %s(%i): Átariau %s(%i) uþ %s (+%i star)", playerName[playerid], playerid, playerName[id], id, itaReason, itarimai[litem][starkiekis]);
+								pInfo[id][gaudomumas] += itarimai[litem][starkiekis];
+
+								SendFormat(playerid, GREEN, "+ Átarëte %s(%i) uþ %s (+%i star)", playerName[id], id, itaReason, itarimai[litem][starkiekis]);
+								SendFormat(id, GREEN, "[Átarimai] %s(%i) átarë jus uþ %s (+%i star)", playerName[playerid], playerid, itaReason, itarimai[litem][starkiekis]);
+							}
+						}
+					}
+					return 1;
+				}
+				Dialog_ShowCallback(playerid, using inline itarti_zaideja, DIALOG_STYLE_TABLIST, itariamas_zaidejas, fBuffer, "Átarti", "Iðeiti");
+			}
+		}
+		else return MSG(playerid, RED, "- Tokio þaidëjo nëra");
+	}
+	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
+	return 1;
+}
+
 YCMD:policija(playerid, params[], help)
 {
 	if(pInfo[playerid][darbas] != POLICININKAI) return MSG(playerid, RED, "- Komanda skirta policijai!");
 
 	new list[500];	
-	strcat(list, "{CF9F94}Policijos {ffffff}komandos\n\n{CF9F94}/skydas{ffffff} - uþdeda skydà ant rankos/nugaros\n{CF9F94}/liemene{ffffff} - uþdeda neperðaunamà liemenæ\n{CF9F94}/gaudomi{ffffff} - gaudomø sàraðas\n{CF9F94}/begliai{ffffff} - bëgliø sàraðas\n{CF9F94}/bega{ffffff} - uþdeda bëglio statusà\n{CF9F94}/nubega{ffffff} - nuimà bëglio statusà\n{CF9F94}/ant{ffffff} - surakina þaidëjà\n{CF9F94}/r{ffffff} - darbo racija\n{CF9F9}/tr{ffffff} - teisësaugos racija");
+	strcat(list, "{CF9F94}Policijos {ffffff}komandos\n\n{CF9F94}/skydas{ffffff} - uþdeda skydà ant rankos/nugaros\n{CF9F94}/liemene{ffffff} - uþdeda neperðaunamà liemenæ\n{CF9F94}/gaudomi{ffffff} - gaudomø sàraðas\n{CF9F94}/begliai{ffffff} - bëgliø sàraðas\n{CF9F94}/bega{ffffff} - uþdeda bëglio statusà\n{CF9F94}/nubega{ffffff} - nuimà bëglio statusà\n{CF9F94}/ant{ffffff} - surakina þaidëjà\n{CF9F94}/r{ffffff} - darbo racija\n{CF9F94}/tr{ffffff} - teisësaugos racija");
 	ShowPlayerDialog(playerid, pdkomandos, DIALOG_STYLE_MSGBOX, "Policijos komandos", list, "Supratau", "");
 	return 1;
 }
@@ -3169,7 +3442,7 @@ YCMD:valdzia(playerid, params[], help)
 	}
 	else
 	{
-		format(str, sizeof(str), "\n{00FFAA}Savininkai\n\t{00FFAA}• {ffffff}Savininkas atsijungæs\n");
+		format(str, sizeof(str), "\n{00FFAA}Savininkai\n\t{00FFAA}• {ffffff}Savininkas nepridëtas\n");
 		strcat(fstr, str);
 	}
 
@@ -3183,9 +3456,38 @@ YCMD:valdzia(playerid, params[], help)
 	}
 	else
 	{
-		format(str, sizeof(str), "\n\t{00FFAA}• {ffffff}Savininkas atsijungæs\n");
+		format(str, sizeof(str), "\t{00FFAA}• {ffffff}Savininkas nepridëtas\n");
 		strcat(fstr, str);
 	}
+
+	if(!isnull(KOMANDOSNARIAI_INFO[knario_vardas0]))
+	{
+		id = GetPlayeridMid(KOMANDOSNARIAI_INFO[knario_vardas0]);
+		if(id != INVALID_PLAYER_ID) status = "{00FF11}yra";
+		else status = "{FF3C00}nëra";
+		format(str, sizeof(str), "\n{00FFAA}Komandos nariai\n\t{00FFAA}• {ffffff}Komandos narys {00FFAA}%s {ffffff}ðiuo metu %s\n", KOMANDOSNARIAI_INFO[knario_vardas0], status);
+		strcat(fstr, str);
+	}
+	else
+	{
+		format(str, sizeof(str), "\n{00FFAA}Komandos nariai\n\t{00FFAA}• {ffffff}Komandos narys nepridëtas\n");
+		strcat(fstr, str);
+	}	
+
+	if(!isnull(KOMANDOSNARIAI_INFO[knario_vardas1]))
+	{
+		id = GetPlayeridMid(KOMANDOSNARIAI_INFO[knario_vardas1]);
+		if(id != INVALID_PLAYER_ID) status = "{00FF11}yra";
+		else status = "{FF3C00}nëra";
+		format(str, sizeof(str), "\t{00FFAA}• {ffffff}Komandos narys {00FFAA}%s {ffffff}ðiuo metu %s\n", KOMANDOSNARIAI_INFO[knario_vardas1], status);
+		strcat(fstr, str);
+	}
+	else
+	{
+		format(str, sizeof(str), "\t{00FFAA}• {ffffff}Komandos narys nepridëtas\n");
+		strcat(fstr, str);
+	}
+
 	ShowPlayerDialog(playerid, valdzioslist, DIALOG_STYLE_MSGBOX, "Direktoriai", fstr, "Supratau", "");
 	return 1;
 }
@@ -3219,7 +3521,7 @@ YCMD:darboinfo(playerid, params[], help)
 				format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff}Dirba: {496da6}%s", ardirba);
 				strcat(zBuffer, fBuffer);
 
-				if(!DarboInfo[MEDIKAI][dirba]){format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff} Nedirbs iki: {496da6}%s", date(DarboInfo[MEDIKAI][nedirbsiki]));}
+				if(!DarboInfo[MEDIKAI][dirba]){format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff} Nedirbs iki: {496da6}%s", date(DarboInfo[MEDIKAI][nedirbsiki])); strcat(zBuffer, fBuffer);}
 
 
 			}
@@ -3240,24 +3542,26 @@ YCMD:darboinfo(playerid, params[], help)
 				format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff}Dirba: {496da6}%s", ardirba);
 				strcat(zBuffer, fBuffer);
 
-				if(!DarboInfo[POLICININKAI][dirba]){format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff} Nedirbs iki: {496da6}%s", date(DarboInfo[POLICININKAI][nedirbsiki]));}
+				if(!DarboInfo[POLICININKAI][dirba]){format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff} Nedirbs iki: {496da6}%s", date(DarboInfo[POLICININKAI][nedirbsiki])); strcat(zBuffer, fBuffer);}
 			}
 			case ARMIJA:
 			{
-				format(fBuffer, sizeof(fBuffer), "\t{ffffff}Policininkø informacija\n\n{496da6}•{ffffff} Minimalus {496da6}praþaidimo{ffffff} reikalavimas: %i min\n\n{496da6}•{ffffff} Minimalus {496da6}baudø{ffffff} reikalavimas: {496da6}%i{ffffff}",\
+				format(fBuffer, sizeof(fBuffer), "\t{ffffff}Armijos informacija\n\n{496da6}•{ffffff} Minimalus {496da6}praþaidimo{ffffff} reikalavimas: {496da6}%i{ffffff} min\n\n{496da6}•{ffffff} Minimalus {496da6}baudø{ffffff} reikalavimas: {496da6}%i{ffffff}",\
 				DarboInfo[ARMIJA][dienosminimumasMIN], DarboInfo[ARMIJA][dienosminimumasBAUDOS]);
 				strcat(zBuffer, fBuffer);
 
 				format(fBuffer, sizeof(fBuffer), "\n\n{496da6}•{ffffff} Minimalus {496da6}patirties{ffffff} reikalavimas norint ásidarbinti: {496da6}%i{ffffff} XP\n\n{496da6}•{ffffff} Ið viso {496da6}prisijungusiø{ffffff} darbuotojø: {496da6}%i{ffffff}",\
-				ARMIJOS_XP, GetWorkersCount(ARMIJA, true));
+				POLICININKU_XP, GetWorkersCount(ARMIJA, true) );
+
+				strcat(zBuffer, fBuffer);
 
 				if(DarboInfo[ARMIJA][dirba]) ardirba = "dirba";
 				else ardirba = "nedirba";
 
-				format(fBuffer, sizeof(fBuffer), "\n\n{496da6}•{ffffff} Dirba: {496da6}%s", ardirba);
+				format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff}Dirba: {496da6}%s", ardirba);
 				strcat(zBuffer, fBuffer);
 
-				if(!DarboInfo[ARMIJA][dirba]){format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff} Nedirbs iki: {496da6}%s", date(DarboInfo[ARMIJA][nedirbsiki]));}
+				if(!DarboInfo[ARMIJA][dirba]){format(fBuffer, sizeof(fBuffer), "\n\n{496da6}• {ffffff} Nedirbs iki: {496da6}%s", date(DarboInfo[ARMIJA][nedirbsiki])); strcat(zBuffer, fBuffer);}
 			}
 		}
 
@@ -3401,7 +3705,7 @@ YCMD:armija(playerid, params[], help)
 
 YCMD:dvp(playerid, params[], help)
 {
-    if(pInfo[playerid][direktorius] > 0){ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai", "Pasirinkti", "Iðeiti");}
+    if(pInfo[playerid][direktorius] > 0){ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai\n{3abeff}• {ffffff}Rangø valdymas\n{3abeff}• {ffffff}Pavaduotojas", "Pasirinkti", "Iðeiti");}
     else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
     return 1;
 }
@@ -3656,7 +3960,7 @@ YCMD:pzu(playerid, params[], help)
             SetPlayerInterior(playerid, pInfo[playerid][BeforeSpectatingInterior]);
             SetSpawnInfo(playerid, NO_TEAM, pInfo[playerid][BeforeSpectatingSkin], pInfo[playerid][BeforeSpectatingX], pInfo[playerid][BeforeSpectatingY], pInfo[playerid][BeforeSpectatingZ], 0, 0, 0, 0, 0, 0, 0);
             TogglePlayerSpectating(playerid, 0);
-            for(new slot=0; slot<12; slot++) ac_GivePlayerWeapon(playerid,pInfo[playerid][spdata][slot],pInfo[playerid][spdata][12+slot]);
+            for(new slot=0; slot<12; slot++) GivePlayerWeapon(playerid,pInfo[playerid][spdata][slot],pInfo[playerid][spdata][12+slot]);
 		}
 	}
 	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
@@ -3665,7 +3969,7 @@ YCMD:pzu(playerid, params[], help)
 
 YCMD:nuispdrk(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][dpriziuretojas] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == DPRIZIURETOJAS)
 	{
 		new id;
 		if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Nuimti áspëjimà direktoriui: /nuispdrk [Dalis vardo/ID]");
@@ -3690,7 +3994,7 @@ YCMD:nuispdrk(playerid, params[], help)
 
 YCMD:nuispdrkoff(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][dpriziuretojas] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == DPRIZIURETOJAS)
 	{
 		new id, Vardas[MAX_PLAYER_NAME];
 		if(sscanf(params, "s[24]", Vardas)) return MSG(playerid, 0x00B8D8AA, "• Nuimti áspëjimà direktoriui (OFFLINE): /nuispdrkoff [Vardas_Pavardë]");
@@ -3721,7 +4025,7 @@ function Nuispdrkaoff(playerid, name[])
 
 		SendFormat(playerid, GREEN, "+ Nuëmëte áspëjimà direktoriui %s, dabar jis turi %i áspëjimus(-à)", name, direkoisp);
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET drkisp = '%i' WHERE vardas = '%e'", direkoisp, name);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktoriaus_ispejimai = '%i' WHERE vardas = '%e'", direkoisp, name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 	}
 	else return MSG(playerid, RED, "- Tokio þaidëjo duomenø bazëje nëra!");
@@ -3730,7 +4034,7 @@ function Nuispdrkaoff(playerid, name[])
 
 YCMD:ispetidrk(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][dpriziuretojas] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == DPRIZIURETOJAS)
 	{
 		new id, reason[25];
 		if(sscanf(params, "us[25]", id, reason)) return MSG(playerid, 0x00B8D8AA, "• Áspëti direktoriø: /ispetidrk [Dalis vardo/ID] [Prieþastis]");
@@ -3748,7 +4052,7 @@ YCMD:ispetidrk(playerid, params[], help)
 		mysql_format(connectionHandle, query, 200, "INSERT INTO `DrkIsp_vvp` (`data`, `priezastis`, `kasispejo`, `vardas`) VALUES ('%s', '%s', '%s', '%s')", GautiData(0), reason, playerName[playerid], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET drkisp = '%i' WHERE vardas = '%e'", pInfo[id][drkisp], playerName[id]);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktoriaus_ispejimai = '%i' WHERE vardas = '%e'", pInfo[id][drkisp], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE darbai SET drkisp = '%i' WHERE jobID = '%i'", pInfo[id][drkisp], pInfo[id][direktorius]);
@@ -3933,7 +4237,7 @@ function Nuimtidrkaoff(playerid, name[])
 
 		if(direktoriusid == 0) return MSG(playerid, RED, "- Þaidëjas nëra direktorius");
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '0', disp = '0' WHERE vardas = '%e'", name);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '0', direktoriaus_ispejimai = '0' WHERE vardas = '%e'", name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		SendFormat(playerid, GREEN, "+ Nuëmëte direktoriø þaidëjui %s", name);
@@ -3967,7 +4271,7 @@ function Nuimtidrkaoff(playerid, name[])
 
 YCMD:nuimtidrk(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][dpriziuretojas] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == DPRIZIURETOJAS)
 	{
 		new id, reason[25];
 		if(sscanf(params, "us[25]", id, reason)) return MSG(playerid, 0x00B8D8AA, "• Nuimti direktoriø: /nuimtidrk [Dalis vardo/ID] [Prieþastis]");
@@ -4017,7 +4321,7 @@ YCMD:nuimtidrk(playerid, params[], help)
 
 YCMD:ispetidrkoff(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][dpriziuretojas] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == DPRIZIURETOJAS)
 	{
 		new Vardas[MAX_PLAYER_NAME], id, reason[25];
 		if(sscanf(params, "s[24]s[25]", Vardas, reason)) return MSG(playerid, 0x00B8D8AA, "• Áspëti direktoriø (OFFLINE): /ispetidrkoff [Vardas_Pavardë] [Prieþastis]");
@@ -4057,7 +4361,7 @@ function Ispetidrkaoff(playerid, name[], reason[])
 			GautiData(0), reason, playerName[playerid], name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET drkisp = '%i' WHERE vardas = '%e'", direkoisp, name);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktoriaus_ispejimai = '%i' WHERE vardas = '%e'", direkoisp, name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE darbai SET drkisp = '%i' WHERE vardas = '%e'", direkoisp, name);
@@ -4067,7 +4371,7 @@ function Ispetidrkaoff(playerid, name[], reason[])
 		{
 			SendFormat(playerid, GREEN, "+ Áspëjote direktoriø %s dël %s jis surinko 3 ásp ir yra nuðalintas", name, reason);	
 
-			mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET drkisp = '0' WHERE vardas = '%e'", name);
+			mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktoriaus_ispejimai = '0' WHERE vardas = '%e'", name);
 			mysql_tquery(connectionHandle, query, "SendQuery", "");
 			foreach(new i : Player)
 			{
@@ -4185,7 +4489,7 @@ YCMD:kill(playerid, params[], help)
 			    format(String, sizeof(String), "{75B244}••• {FFFFFF}Jus nuþudë Savininkas {33B7D3}%s{ffffff}. Prieþastis: {33B7D3}%s", playerName[playerid], Reason);
 			}
         }
-        ac_ResetPlayerWeapons(id);
+        ResetPlayerWeapons(id);
         MSG (id, -1, String);
 
 		format(String, sizeof(String), "{75B244}••• {FFFFFF}Nuþudëte þaideja {33B7D3}%s{ffffff}!", playerName[id]);
@@ -4331,6 +4635,7 @@ YCMD:to(playerid, params[], help)
 		if(id == playerid) return MSG(playerid, 0xFF0000AA, "- Pas save teleportuotis negalite!");
 		if(!online[id]) return MSG(playerid, 0xFF0000AA, "- Þaidëjas neprisijungæs");
 		if(bega[id] && pInfo[playerid][ADMIN] < 4) return MSG(playerid, RED, "- Þaidëjas turi bëglio statusà");
+		if(pInfo[playerid][Spectatina] == true) return MSG(playerid, RED, "- Jûs stebëjimo reþime!");
 		format(msg, sizeof(msg), "{ffffff}Administratorius {6e6387}%s{ffffff} nori pas jus atsiteleportuoti\n\nJeigu sutinkate spauskite „{6e6387}Sutinku{fffffff}“\nJeigu nesutinkate spauskite „{6e6387}Nesutinku{ffffff}“", playerName[playerid]);
 		pInfo[playerid][PasirinktasZaidejas] = id;
 
@@ -4467,23 +4772,23 @@ YCMD:skirtivippriz(playerid, params[], help)
 		if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Skirti VIP nariø priþiûrëtojumi: /skirtivippriz [Dalis vardo/ID]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, 0xFF0000AA, "- Tokio þaidëjo nëra!");
 		if(!online[id]) return MSG(playerid, RED, "- Þaidëjas neprisijungæs");
-		if(pInfo[id][vippriz] == 1) return MSG(playerid, RED, "- Þaidëjas jau VIP nariø priþiûrëtojas");
+		if(pInfo[id][priziuretojas] == VIPPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas jau VIP nariø priþiûrëtojas");
 
-		pInfo[id][vippriz] = 1;
+		pInfo[id][priziuretojas] = VIPPRIZIURETOJAS;
 
 		SendFormat(playerid, GREEN, "+ Paskyrëte %s VIP nariø priþiûrëtojumi", playerName[id]);
 		SendFormat(id, GREEN, "• Savininkas %s paskyrë jus VIP nariø priþiûrëtojumi", playerName[playerid]);
 
-		format(pInfo[id][vipprizpareigosenuo], 31, "%s", GautiData(0));
+		format(pInfo[id][prizpareigosenuo], 31, "%s", GautiData(0));
 		format(VIPPRIZINFO[prizvardas], 24, "%s", playerName[id]);
 		format(VIPPRIZINFO[prizpareigosenuo], 24, "%s", GautiData(0));
 
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET vippriz = '1', vipprizisp = '0', vipprizpareigosenuo = '%s' WHERE vardas = '%e'", \
-			pInfo[id][vipprizpareigosenuo], playerName[id]);
+		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '1', prizisp = '0', prizpareigosenuo = '%s' WHERE vardas = '%e'", \
+			pInfo[id][prizpareigosenuo], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '%e'", \
-			pInfo[id][vipprizpareigosenuo], playerName[id]);
+			pInfo[id][prizpareigosenuo], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -4501,7 +4806,7 @@ YCMD:nuimtidprizoff(playerid, params[], help)
 
 		if(id != INVALID_PLAYER_ID) return MSG(playerid, RED, "- Þaidëjas prisijungæs");
 
-		mysql_format(connectionHandle, query, 140, "SELECT dpriziuretojas FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_format(connectionHandle, query, 140, "SELECT priziuretojas FROM zaidejai WHERE vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "Nuimtidprizaoff", "is", playerid, Vardas);
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -4515,11 +4820,11 @@ function Nuimtidprizaoff(playerid, name[])
 		new dprizid;
 		cache_get_value_index_int(0,0, dprizid);
 
-		if(dprizid == 0) return MSG(playerid, RED, "- Þaidëjas nëra direktoriø priþiûrëtojas");
+		if(dprizid == 0 || dprizid != DPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra direktoriø priþiûrëtojas");
 
 		SendFormat(playerid, GREEN, "+ Nuëmëte direktoriø priþiûrëtojà %s", name);
 
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET dpriziuretojas = '0', dprizisp = '0', dprizpareigosenuo = '' WHERE vardas = '%e'", name);
+		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE dpriz SET vardas = '', prizpareigosenuo = '', prizisp = '0'");
@@ -4543,11 +4848,11 @@ YCMD:nuimtidpriz(playerid, params[], help)
 		if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Nuimti direktoriø priþiûrëtojà: /nuimtidpriz [Dalis vardo/ID]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, 0xFF0000AA, "- Tokio þaidëjo nëra!");
 		if(!online[id]) return MSG(playerid, RED, "- Þaidëjas neprisijungæs");
-		if(pInfo[id][dpriziuretojas] == 0) return MSG(playerid, RED, "- Þaidëjas nëra direktoriø priþiûrëtojas");
+		if(pInfo[id][priziuretojas] != DPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra direktoriø priþiûrëtojas");
 
-		pInfo[id][dpriziuretojas] = 0;
-		pInfo[id][dprizisp] = 0;
-		pInfo[id][dprizpareigosenuo] = EOS;
+		pInfo[id][priziuretojas] = 0;
+		pInfo[id][priziuretojausisp] = 0;
+		pInfo[id][prizpareigosenuo] = EOS;
 
 		DPRIZINFO[prizvardas] = EOS;
 		DPRIZINFO[prizpareigosenuo] = EOS;
@@ -4559,7 +4864,7 @@ YCMD:nuimtidpriz(playerid, params[], help)
 		mysql_format(connectionHandle, query, 140, "UPDATE dpriz SET prizpareigosenuo = '', prizisp = '0', vardas = ''");
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET dpriziuretojas = '0', dprizisp = '0', dprizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
+		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -4575,17 +4880,17 @@ YCMD:nuimtivippriz(playerid, params[], help)
 		if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Nuimti V.I.P priþiûrëtojà: /nuimtivippriz [Dalis vardo/ID]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, 0xFF0000AA, "- Tokio þaidëjo nëra!");
 		if(!online[id]) return MSG(playerid, RED, "- Þaidëjas neprisijungæs");
-		if(pInfo[id][vippriz] == 0) return MSG(playerid, RED, "- Þaidëjas nëra V.I.P priþiûrëtojas");
+		if(pInfo[id][priziuretojas] != VIPPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra V.I.P priþiûrëtojas");
 
-		pInfo[id][vippriz] = 0;
-		pInfo[id][vipprizisp] = 0;
-		pInfo[id][vipprizpareigosenuo] = EOS;
+		pInfo[id][priziuretojas] = 0;
+		pInfo[id][priziuretojausisp] = 0;
+		pInfo[id][prizpareigosenuo] = EOS;
 
 		VIPPRIZINFO[prizvardas] = EOS;
 		VIPPRIZINFO[prizpareigosenuo] = EOS;
 		VIPPRIZINFO[prizisp] = 0;
 
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET vippriz = '0', vipprizisp = '0', vipprizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
+		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizpareigosenuo = '', vardas = '', prizisp = '0'");
@@ -4603,17 +4908,17 @@ YCMD:nuimtiunbanpriz(playerid, params[], help)
 		if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Nuimti UNBAN priþiûrëtojà: /nuimtiapriz [Dalis vardo/ID]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, 0xFF0000AA, "- Tokio þaidëjo nëra!");
 		if(!online[id]) return MSG(playerid, RED, "- Þaidëjas neprisijungæs");
-		if(pInfo[id][unbanpriziuretojas] == 0) return MSG(playerid, RED, "- Þaidëjas nëra UNBAN priþiûrëtojas");
+		if(pInfo[id][priziuretojas] != UNBANPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra UNBAN priþiûrëtojas");
 
-		pInfo[id][unbanpriziuretojas] = 0;
-		pInfo[id][unbanprizisp] = 0;
-		pInfo[id][unbanprizpareigosenuo] = EOS;
+		pInfo[id][priziuretojas] = 0;
+		pInfo[id][priziuretojausisp] = 0;
+		pInfo[id][prizpareigosenuo] = EOS;
 
 		UNBANPRIZ_INFO[prizvardas] = EOS;
 		UNBANPRIZ_INFO[prizpareigosenuo] = EOS;
 		UNBANPRIZ_INFO[prizisp] = 0;
 
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET unbanpriziuretojas = '0', unbanprizisp = '0', unbanprizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
+		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE unban_priz SET prizpareigosenuo = '', vardas = '', prizisp = '0'");
@@ -4631,17 +4936,17 @@ YCMD:nuimtiapriz(playerid, params[], help)
 		if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Nuimti administratoriø priþiûrëtojà: /nuimtiapriz [Dalis vardo/ID]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, 0xFF0000AA, "- Tokio þaidëjo nëra!");
 		if(!online[id]) return MSG(playerid, RED, "- Þaidëjas neprisijungæs");
-		if(pInfo[id][adminpriz] == 0) return MSG(playerid, RED, "- Þaidëjas nëra administratoriø priþiûrëtojas");
+		if(pInfo[id][priziuretojas] != ADMINPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra administratoriø priþiûrëtojas");
 
-		pInfo[id][adminpriz] = 0;
-		pInfo[id][adminprizisp] = 0;
-		pInfo[id][aprizpareigosenuo] = EOS;
+		pInfo[id][priziuretojas] = 0;
+		pInfo[id][priziuretojausisp] = 0;
+		pInfo[id][prizpareigosenuo] = EOS;
 
 		ADMINPRIZINFO[prizvardas] = EOS;
 		ADMINPRIZINFO[prizpareigosenuo] = EOS;
 		ADMINPRIZINFO[prizisp] = 0;
 
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET adminpriz = '0', vipprizisp = '0', vipprizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
+		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE admin_priz SET prizpareigosenuo = '', vardas = '', prizisp = '0'");
@@ -4662,7 +4967,7 @@ YCMD:nuimtiaprizoff(playerid, params[], help)
 
 		if(id != INVALID_PLAYER_ID) return MSG(playerid, RED, "- Þaidëjas prisijungæs");
 		
-		mysql_format(connectionHandle, query, 140, "SELECT adminpriz FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_format(connectionHandle, query, 140, "SELECT priziuretojas FROM zaidejai WHERE vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "nuimtiadminpriz_off", "is", playerid, Vardas);
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -4677,7 +4982,7 @@ function nuimtiadminpriz_off(playerid, neim[])
 
 		cache_get_value_index_int(0, 0, adminpriz_id);
 
-		if(adminpriz_id == 0) return MSG(playerid, RED, "- Þaidëjas nëra administratoriø priþiûrëtojas");
+		if(adminpriz_id == 0 || adminpriz_id != ADMINPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra administratoriø priþiûrëtojas");
 		
 		SendFormat(playerid, GREEN, "+ Nuëmëte administratoriø priþiûrëtojà þaidëjui %s", neim);
 
@@ -4685,7 +4990,7 @@ function nuimtiadminpriz_off(playerid, neim[])
 		ADMINPRIZINFO[prizpareigosenuo] = EOS;
 		ADMINPRIZINFO[prizisp] = 0;
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET adminpriz = '0', adminprizisp = '0', aprizpareigosenuo = '' WHERE vardas = '%e'", neim);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", neim);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE admin_priz SET prizpareigosenuo = '', vardas = '', prizisp = '0'");
@@ -4706,7 +5011,7 @@ YCMD:nuimtivipprizoff(playerid, params[], help)
 
 		if(id != INVALID_PLAYER_ID) return MSG(playerid, RED, "- Þaidëjas prisijungæs");
 		
-		mysql_format(connectionHandle, query, 140, "SELECT vippriz FROM zaidejai WHERE vardas = '%e'", Vardas);
+		mysql_format(connectionHandle, query, 140, "SELECT priziuretojas FROM zaidejai WHERE vardas = '%e'", Vardas);
 		mysql_tquery(connectionHandle, query, "nuimtivip_prizoff", "is", playerid, Vardas);
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -4721,7 +5026,7 @@ function nuimtivip_prizoff(playerid, name[])
 
 		cache_get_value_index_int(0,0, vippriz_id);
 
-		if(vippriz_id == 0) return MSG(playerid, RED, "- Þaidëjas nëra V.I.P priþiûrëtojas");
+		if(vippriz_id == 0 || vippriz_id != VIPPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas nëra V.I.P priþiûrëtojas");
 
 		SendFormat(playerid, GREEN, "+ Nuëmëte V.I.P priþiûrëtojà þaidëjui %s", name);
 
@@ -4729,7 +5034,7 @@ function nuimtivip_prizoff(playerid, name[])
 		VIPPRIZINFO[prizpareigosenuo] = EOS;
 		VIPPRIZINFO[prizisp] = 0;
 
-		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET vippriz = '0', vipprizisp = '0', vipprizpareigosenuo = '' WHERE vardas = '%e'", name);
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET priziuretojas = '0', prizisp = '0', prizpareigosenuo = '' WHERE vardas = '%e'", name);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 		mysql_format(connectionHandle, query, 140, "UPDATE vip_priz SET prizpareigosenuo = '', vardas = '', prizisp = '0'");
@@ -4747,21 +5052,21 @@ YCMD:skirtidpriz(playerid, params[], help)
 		if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Skirti direktoriø priþiûrëtojumi: /skirtidpriz [Dalis vardo/ID]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, 0xFF0000AA, "- Tokio þaidëjo nëra!");
 		if(!online[id]) return MSG(playerid, RED, "- Þaidëjas neprisijungæs");
-		if(pInfo[id][dpriziuretojas] == 1) return MSG(playerid, RED, "- Þaidëjas jau direktoriø priþiûrëtojas");
+		if(pInfo[id][priziuretojas] == DPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas jau direktoriø priþiûrëtojas");
 
-		pInfo[id][dpriziuretojas] = 1;
+		pInfo[id][priziuretojas] = DPRIZIURETOJAS;
 
 		SendFormat(playerid, GREEN, "+ Paskyrëte %s direktoriø priþiûrëtojumi", playerName[id]);
 		SendFormat(id, GREEN, "• Savininkas %s paskyrë jus direktoriø priþiûrëtojumi", playerName[playerid]);
 
-		format(pInfo[id][dprizpareigosenuo], 31, "%s", GautiData(0));
+		format(pInfo[id][prizpareigosenuo], 31, "%s", GautiData(0));
 		format(DPRIZINFO[prizvardas], 24, "%s", playerName[id]);
 		format(DPRIZINFO[prizpareigosenuo], 24, "%s", GautiData(0));
 
 		mysql_format(connectionHandle, query, 180, "UPDATE dpriz SET prizpareigosenuo = '%s', vardas = '%e'", GautiData(0), playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET dpriziuretojas = '1', dprizisp = '0', dprizpareigosenuo = '%s' WHERE vardas = '%e'", pInfo[id][dprizpareigosenuo], playerName[id]);
+		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '1', prizisp = '0', prizpareigosenuo = '%s' WHERE vardas = '%e'", pInfo[id][prizpareigosenuo], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -4776,21 +5081,21 @@ YCMD:skirtiadminpriz(playerid, params[], help)
 		if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Skirti administratoriø priþiûrëtojumi: /skirtiadminpriz [Dalis vardo/ID]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, 0xFF0000AA, "- Tokio þaidëjo nëra!");
 		if(!online[id]) return MSG(playerid, RED, "- Þaidëjas neprisijungæs");
-		if(pInfo[id][adminpriz] == 1) return MSG(playerid, RED, "- Þaidëjas jau administratoriø priþiûrëtojas");
+		if(pInfo[id][priziuretojas] == ADMINPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas jau administratoriø priþiûrëtojas");
 
-		pInfo[id][adminpriz] = 1;
+		pInfo[id][priziuretojas] = ADMINPRIZIURETOJAS;
 
-		format(pInfo[id][aprizpareigosenuo], 31, "%s", GautiData(0));
+		format(pInfo[id][prizpareigosenuo], 31, "%s", GautiData(0));
 		format(ADMINPRIZINFO[prizvardas], 24, "%s", playerName[id]);
 		format(ADMINPRIZINFO[prizpareigosenuo], 24, "%s", GautiData(0));
 
 		SendFormat(playerid, GREEN, "+ Paskyrëte %s administratoriø priþiûrëtojumi", playerName[id]);
 		SendFormat(id, GREEN, "• Savininkas %s paskyrë jus administratoriø priþiûrëtojumi", playerName[playerid]);
 
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET adminpriz = '1', adminprizisp = '0', aprizpareigosenuo = '%s' WHERE vardas = '%e'", pInfo[id][aprizpareigosenuo], playerName[id]);
+		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '2', prizisp = '0', prizpareigosenuo = '%s' WHERE vardas = '%e'", pInfo[id][prizpareigosenuo], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 180, "UPDATE admin_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '%e'", pInfo[id][aprizpareigosenuo], playerName[id]);
+		mysql_format(connectionHandle, query, 180, "UPDATE admin_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '%e'", pInfo[id][prizpareigosenuo], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -4805,21 +5110,21 @@ YCMD:skirtiunbanpriz(playerid, params[], help)
 		if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Skirti UNBAN priþiûrëtojumi: /skirtiunbanpriz [Dalis vardo/ID]");
 		if(!IsPlayerConnected(id)) return MSG(playerid, 0xFF0000AA, "- Tokio þaidëjo nëra!");
 		if(!online[id]) return MSG(playerid, RED, "- Þaidëjas neprisijungæs");
-		if(pInfo[id][unbanpriziuretojas] == 1) return MSG(playerid, RED, "- Þaidëjas jau UNBAN priþiûrëtojas");
+		if(pInfo[id][priziuretojas] == UNBANPRIZIURETOJAS) return MSG(playerid, RED, "- Þaidëjas jau UNBAN priþiûrëtojas");
 
-		pInfo[id][unbanpriziuretojas] = 1;
+		pInfo[id][priziuretojas] = UNBANPRIZIURETOJAS;
 
-		format(pInfo[id][unbanprizpareigosenuo], 31, "%s", GautiData(0));
+		format(pInfo[id][prizpareigosenuo], 31, "%s", GautiData(0));
 		format(UNBANPRIZ_INFO[prizvardas], 24, "%s", playerName[id]);
 		format(UNBANPRIZ_INFO[prizpareigosenuo], 24, "%s", GautiData(0));
 
 		SendFormat(playerid, GREEN, "+ Paskyrëte %s UNBAN priþiûrëtojumi", playerName[id]);
 		SendFormat(id, GREEN, "• Savininkas %s paskyrë jus UNBAN priþiûrëtojumi", playerName[playerid]);
 
-		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET unbanpriziuretojas = '1', unbanprizisp = '0', unbanprizpareigosenuo = '%s' WHERE vardas = '%e'", pInfo[id][aprizpareigosenuo], playerName[id]);
+		mysql_format(connectionHandle, query, 180, "UPDATE zaidejai SET priziuretojas = '4', prizisp = '0', prizpareigosenuo = '%s' WHERE vardas = '%e'", pInfo[id][prizpareigosenuo], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-		mysql_format(connectionHandle, query, 180, "UPDATE unban_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '%e'", pInfo[id][unbanprizpareigosenuo], playerName[id]);
+		mysql_format(connectionHandle, query, 180, "UPDATE unban_priz SET prizpareigosenuo = '%s', prizisp = '0', vardas = '%e'", pInfo[id][prizpareigosenuo], playerName[id]);
 		mysql_tquery(connectionHandle, query, "SendQuery", "");
 	}
 	else return MSG(playerid, -1, "{e9967a}KLAIDA:{ffffff} Apgailestaujame, tokia komanda neegzistuoja");
@@ -4865,7 +5170,7 @@ function onSkirtiVIPOFF(playerid, name[])
 
 YCMD:skirtidrkoff(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][dpriziuretojas] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == DPRIZIURETOJAS)
 	{
 		new Vardas[MAX_PLAYER_NAME], id;
 		if(sscanf(params, "s[24]", Vardas)) return MSG(playerid, 0x00B8D8AA, "• Skirti direktoriumi (OFFLINE): /skirtidrkoff [Vardas_Pavardë]");
@@ -4901,7 +5206,7 @@ function onSkirtiDRKOff(playerid, name[])
 				{
 					case 0:
 					{
-						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '1', drkpareigosenuo = '%s', disp = '0' WHERE vardas = '%e'", GautiData(0), pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '1', drkpareigosenuo = '%s', direktoriaus_ispejimai = '0' WHERE vardas = '%e'", GautiData(0), pInfo[playerid][PasirinktasZaidejasOFF]);
 						mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 						mysql_format(connectionHandle, query, 140, "UPDATE darbai SET drk = '%e', drkpareigosenuo = '%s', drkisp = '0' WHERE jobID = '%i'", pInfo[playerid][PasirinktasZaidejasOFF], GautiData(0), 1);
@@ -4911,7 +5216,7 @@ function onSkirtiDRKOff(playerid, name[])
 					}
 					case 1:
 					{
-						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '2', drkpareigosenuo = '%s', disp = '0' WHERE vardas = '%e'", GautiData(0), pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '2', drkpareigosenuo = '%s', direktoriaus_ispejimai = '0' WHERE vardas = '%e'", GautiData(0), pInfo[playerid][PasirinktasZaidejasOFF]);
 						mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 						mysql_format(connectionHandle, query, 140, "UPDATE darbai SET drk = '%e', drkpareigosenuo = '%s', drkisp = '0' WHERE jobID = '%i'", pInfo[playerid][PasirinktasZaidejasOFF], GautiData(0), 2);
@@ -4921,7 +5226,7 @@ function onSkirtiDRKOff(playerid, name[])
 					}
 					case 2:
 					{
-						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '3', drkpareigosenuo = '%s', disp = '0' WHERE vardas = '%e'", GautiData(0), pInfo[playerid][PasirinktasZaidejasOFF]);
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET direktorius = '3', drkpareigosenuo = '%s', direktoriaus_ispejimai = '0' WHERE vardas = '%e'", GautiData(0), pInfo[playerid][PasirinktasZaidejasOFF]);
 						mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 						mysql_format(connectionHandle, query, 140, "UPDATE darbai SET drk = '%e', drkpareigosenuo = '%s', drkisp = '0' WHERE jobID = '%i'", pInfo[playerid][PasirinktasZaidejasOFF], GautiData(0), 3);
@@ -5180,7 +5485,7 @@ function restartinam_serveri()
 
 YCMD:atblokuoti(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][unbanpriziuretojas] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == UNBANPRIZIURETOJAS)
 	{
 		new Vardas[MAX_PLAYER_NAME];
 		if(sscanf(params, "s[24]", Vardas)) return MSG(playerid, 0x00B8D8AA, "• Atblokuoti þaidëjà: /atblokuoti [Vardas_Pavardë]");
@@ -5201,7 +5506,7 @@ function OnAtblokuotiZaideja(playerid, neimas[])
 		
 		SendFormat(playerid, -1, "{ffffff}Atblokavote {E4AF6E}%s{ffffff} þaidëjà!", neimas);
 	}
-	else MSG(playerid, -1, "{ffffff}Þaidëjas nëra{E4AF6E}uþblokuotas");
+	else MSG(playerid, -1, "{ffffff}Þaidëjas nëra{E4AF6E} uþblokuotas");
 }
 
 YCMD:atblokuoti_ip(playerid, params[], help)
@@ -5267,18 +5572,24 @@ YCMD:mute(playerid, params[], help)
 		{
 			pInfo[id][Muted] = gettime() + (time * 60);
 			MuteTime[id] = SetTimerEx("Mute", 1000, true, "i",id);
-
+			format(pInfo[id][KasUztilde], 24, "%s'", playerName[playerid]);
 			SendFormatToAll(-1, "{75B244}••• {FFFFFF}Savininkas {33B7D3}%s {ffffff}uþtildë þaidëjà {33B7D3}%s{ffffff}!", playerName[playerid], playerName[id]);
-			SendFormatToAll(-1, "{75B244}••• {FFFFFF}Laikas: {33B7D3}%s!", konvertuoti_pinigus(pInfo[id][Muted]));
+			SendFormatToAll(-1, "{75B244}••• {FFFFFF}Laikas: {33B7D3}%s!", ConvertSeconds(pInfo[id][Muted]));
+
+			mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET mutelaikas = '%i', perma_mute = '0', adminmutename = '%e' WHERE vardas = '%e'", pInfo[id][Muted], playerName[playerid], playerName[id]);
+			mysql_tquery(connectionHandle, query, "SendQuery", "");
 		}
 		else
 		{
 			pInfo[id][Muted] = 0;
 			MuteTime[id] = SetTimerEx("Mute", 1000, true, "i",id);
 			pInfo[id][permamute] = 1;
-
+			format(pInfo[id][KasUztilde], 24, "%s'", playerName[playerid]);
 			SendFormatToAll(-1, "{75B244}••• {FFFFFF}Savininkas {33B7D3}%s {ffffff}uþtildë þaidëjà {33B7D3}%s{ffffff}!", playerName[playerid], playerName[id]);
 			SendClientMessageToAll(-1, "{75B244}••• {FFFFFF}Laikas: {33B7D3}Visam!");
+
+			mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET perma_mute = '1', adminmutename = '%e' WHERE vardas = '%e'", playerName[playerid], playerName[id]);
+			mysql_tquery(connectionHandle, query, "SendQuery", "");
 		}
 	}
 	else return MSG(playerid, -1, "{CC0000}KLAIDA: {ffffff}Apgailestaujame, tokia komanda neegzistuoja! Naudokite komandà: /komandos");
@@ -5289,7 +5600,7 @@ YCMD:mute(playerid, params[], help)
 YCMD:vprizkomandos(playerid, params[], help)
 {
 	#pragma unused help
-	if(pInfo[playerid][vippriz] == 1)
+	if(pInfo[playerid][priziuretojas] == VIPPRIZIURETOJAS)
 	{
 		new list[1000];
 		strcat(list, "\t{CF9F94}V.I.P priþiûrëtojaus komandos\n\n{CF9F94}/vispeti{ffffff} - Áspëti V.I.P nará\n{CF9F94}/pskelbti{ffffff} - skelbti praneðimà\n{CF9F94}/atsisakytivpriz{ffffff} - atsisakyti V.I.P nariø priþiûrëtojaus");
@@ -5303,7 +5614,7 @@ YCMD:vprizkomandos(playerid, params[], help)
 YCMD:aprizkomandos(playerid, params[], help)
 {
 	#pragma unused help
-	if(pInfo[playerid][adminpriz] == 1)
+	if(pInfo[playerid][priziuretojas] == ADMINPRIZIURETOJAS)
 	{
 		new list[1000];
 		strcat(list, "\t{CF9F94}Administratoriø priþiûrëtojaus komandos\n\n{CF9F94}/aispeti{ffffff} - Áspëti admin nará\n{CF9F94}/pskelbti{ffffff} - skelbti praneðimà");
@@ -5318,7 +5629,7 @@ YCMD:aprizkomandos(playerid, params[], help)
 YCMD:unbanprizkomandos(playerid, params[], help)
 {
 	#pragma unused help
-	if(pInfo[playerid][unbanpriziuretojas] == 1)
+	if(pInfo[playerid][priziuretojas] == UNBANPRIZIURETOJAS)
 	{
 		new list[1000];
 		strcat(list, "\t{CF9F94}UNBAN priþiûrëtojaus komandos\n\n{CF9F94}/atsisakytiunbanpriz{ffffff} - atsisakyti UNBAN priþiûrëtojaus pareigø");
@@ -5331,7 +5642,7 @@ YCMD:unbanprizkomandos(playerid, params[], help)
 YCMD:dprizkomandos(playerid, params[], help)
 {
 	#pragma unused help
-	if(pInfo[playerid][adminpriz] == 1)
+	if(pInfo[playerid][priziuretojas] == DPRIZIURETOJAS)
 	{
 		new list[1000];
 		strcat(list, "\t{CF9F94}Direktoriø priþiûrëtojaus komandos\n\n{CF9F94}/ispetidrk{ffffff} - Áspëti direktoriø\n{CF9F94}/ispetidrkoff{ffffff} - áspëti atsijungusá direktoriø");
@@ -5346,7 +5657,7 @@ YCMD:dprizkomandos(playerid, params[], help)
 
 YCMD:skirtidrk(playerid, params[], help)
 {
-	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][dpriziuretojas] == 1)
+	if(pInfo[playerid][ADMIN] == SAVININKAS || pInfo[playerid][priziuretojas] == DPRIZIURETOJAS)
 	{
 		new id;
 		if(sscanf(params, "u", id)) return MSG(playerid, 0x00B8D8AA, "• Skirti direktoriumi: /skirtidrk [Dalis vardo/ID]");
@@ -5631,6 +5942,11 @@ public OnPlayerPickUpPickup(playerid, pickupid)
 
 public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 {
+	if(pickupid == pickups[0][admbauda])
+	{
+		mysql_format(connectionHandle, query, 140, "SELECT * FROM zaideju_baudos_administracines WHERE kamskirta = '%e'", playerName[playerid]);
+		mysql_tquery(connectionHandle, query, "OnPickupSumoketAdmBauda", "i", playerid);
+	}
 	if(pickupid == pickups[0][gunlicbuypickup])
 	{
 		if(pInfo[playerid][glic] == 1) return MSG(playerid, RED, "- Jûs jau turite ginklø licenzijà");
@@ -5728,7 +6044,7 @@ public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 		else if(pInfo[playerid][lytis] == 1)
 		{
 			pInfo[playerid][wUniform] = 1;
-			pInfo[playerid][uniforma] = 219;
+			pInfo[playerid][uniforma] = 308;
 			SetPlayerSkin(playerid, pInfo[playerid][uniforma]);
 			ApplyAnimation(playerid,"PLAYIDLES","stretch",4.1,0,0,0,0,0);
 		}
@@ -5802,7 +6118,7 @@ public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 		}
 		else
 		{
-			pInfo[playerid][uniforma] = 192;
+			pInfo[playerid][uniforma] = 191;
 			pInfo[playerid][wUniform] = 1;
 			SetPlayerSkin(playerid, pInfo[playerid][uniforma]);
 			ApplyAnimation(playerid,"PLAYIDLES","stretch",4.1,0,0,0,0,0);
@@ -5896,7 +6212,7 @@ public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 		else
 		{
 			if(id != INVALID_PLAYER_ID) format(str, 150 , "{ffffff}Generolas: {A4CAA2}%s{ffffff}, pareigose nuo {A4CAA2}%s{ffffff} ðiuo metu jis {A4CAA2}yra {ffffff}þaidime\n\n", DarboInfo[ARMIJA][drk], DarboInfo[ARMIJA][drkpareigosenuo]);
-			else format(str, 150 , "{ffffff}Generolas: {A4CAA2}%s{ffffff}, pareigose nuo {A4CAA2}%s{ffffff} ðiuo metu yra {A4CAA2}nëra{ffffff} {A4CAA2}þaidime\n\n", DarboInfo[ARMIJA][drk], DarboInfo[ARMIJA][drkpareigosenuo]);
+			else format(str, 150, "{ffffff}Generolas: {A4CAA2}%s{ffffff}, pareigose nuo {A4CAA2}%s{ffffff} ðiuo metu yra {A4CAA2}nëra{ffffff} {A4CAA2}þaidime\n\n", DarboInfo[ARMIJA][drk], DarboInfo[ARMIJA][drkpareigosenuo]);
 		}
 
 		strcat(fstr, str);
@@ -5937,6 +6253,7 @@ public OnVehicleMod(playerid, vehicleid, componentid)
 {
 	if(GetPlayerInterior(playerid) == 0 && pInfo[playerid][ADMIN] != SAVININKAS)
 	{
+		//Tikrinti ar toje zonoje tuninimo nera
 		SendFormatAdmin(0xFF0000FF, "Þaidëjas %s tiuninguoja automobilá su nelegaliomis programomis!",playerName[playerid]);
 		Kick(playerid);
 		RemoveVehicleComponent(vehicleid, componentid);
@@ -5974,16 +6291,6 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
 	if(newkeys & KEY_SECONDARY_ATTACK)
 	{
-		if(IsPlayerInRangeOfPoint(playerid, 1.0, -2626.7031,208.8613,4.5943)) // GINKLINES IEJIMAS
-		{
-			SetPlayerInterior(playerid, 7);
-			SetPlayerPos(playerid, 315.7799,-142.7455,999.6016);
-		}
-		if(IsPlayerInRangeOfPoint(playerid, 1.0, 315.7799,-142.7455,999.6016)) // ginklines isejimas
-		{
-			SetPlayerInterior(playerid, 0);
-			SetPlayerPos(playerid, -2626.7031,208.8613,4.5943);
-		}
 		//-------------------------------------------------------------------------------------------------------------------
 		/*if(IsPlayerInRangeOfPoint(playerid, 1.0, -2664.7969,640.1555,14.4531))//ligonines iejimas
 		{
@@ -6090,6 +6397,24 @@ public OnPlayerUpdate(playerid)
 			if(GetPlayerScore(i) != pInfo[i][patirtis])
 			{
 				SetPlayerScore(i, pInfo[i][patirtis]);
+			}
+		}
+	}
+	if(IsPlayerInAnyVehicle(playerid))
+	{
+		new VHicle = GetPlayerVehicleID(playerid);
+		for(new SpikeID = 0;SpikeID <= GetPlayerPoolSize();SpikeID++)
+		{
+    		if(SpygliaiInfo[SpikeID][arPadeti] == true)
+       		 {
+          	 	if(IsPlayerInRangeOfPoint(playerid, 3, SpygliaiInfo[SpikeID][SpygliaiX],SpygliaiInfo[SpikeID][SpygliaiY],SpygliaiInfo[SpikeID][SpygliaiZ]))
+        	    {	
+               		new panels, doors, lights, tires;
+                	GetVehicleDamageStatus(VHicle, panels, doors, lights, tires);
+                	tires = encode_tires(1, 1, 1, 1);
+                	UpdateVehicleDamageStatus(VHicle, panels, doors, lights, tires);
+                	break;
+           		}
 			}
 		}
 	}
@@ -6237,13 +6562,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 								}
 							}
 						}
-						else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai", "Pasirinkti", "Iðeiti");
+						else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai\n{3abeff}• {ffffff}Rangø valdymas\n{3abeff}• {ffffff}Pavaduotojas", "Pasirinkti", "Iðeiti");
 					}
 					Dialog_ShowCallback(playerid, using inline dzinute,DIALOG_STYLE_LIST, "Darbo þinutë", "{3abeff}•{ffffff} Keisti darbo þinutæ\n{3abeff}•{ffffff} Ájungti/iðjungti darbo þinutæ", "Toliau", "Atgal");
 				}
 			}
 			case 3: ShowPlayerDialog(playerid, dfondas, DIALOG_STYLE_LIST, "{ffffff}DVP » Darbo fondas","{3abeff}• {ffffff}Darbo {3abeff}pelnas\n{3abeff}• {ffffff}Iðimti pinigus ið {3abeff}fondo\n{3abeff}• {ffffff}Ádëti pinigø á {3abeff}fondà\n{3abeff}• {ffffff}Iðdalinti pinigus {3abeff}darbuotojams", "Toliau", "Atgal");// darbo fondas
-			case 4:
+			case 4: // Nenaudojamø darbo transporto priemoniø atstatymas
 			{
 				if(response)
 				{
@@ -6298,13 +6623,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 										}
 										Dialog_ShowCallback(playerid, using inline nedarbasreason, DIALOG_STYLE_INPUT, "{ffffff}DVP » Skelbti nedarbo laikà", "{3abeff}»{ffffff} Áraðykite prieþastá dël ko firma nedirbs [MAX 20 simboliø]:", "Toliau", "Iðeiti");
 									}
-									else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai", "Pasirinkti", "Iðeiti");
+									else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai\n{3abeff}• {ffffff}Rangø valdymas\n{3abeff}• {ffffff}Pavaduotojas", "Pasirinkti", "Iðeiti");
 								}
 								Dialog_ShowCallback(playerid, using inline nedarbas, DIALOG_STYLE_INPUT, "{ffffff}DVP » Skelbti nedarbo laikà", "{3abeff}» {ffffff}Áraðykite kiek laiko firma nedirbs [{3abeff}MIN{ffffff}] [MAX 120 MIN]: ", "Toliau", "Atgal");
 							}
 						}
 					}
-					else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai", "Pasirinkti", "Iðeiti");
+					else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai\n{3abeff}• {ffffff}Rangø valdymas\n{3abeff}• {ffffff}Pavaduotojas", "Pasirinkti", "Iðeiti");
 				}
 				Dialog_ShowCallback(playerid, using inline switchdlaikas, DIALOG_STYLE_LIST, "{ffffff}DVP » Darbo laikas","{3abeff}•{ffffff} Skelbti nedarbo laikà", "Toliau", "Atgal");
 			}
@@ -6331,7 +6656,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
                                         DarboInfo[pInfo[playerid][direktorius]][dienosminimumasMIN] = strval(inputt1);
 									}
-									else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai", "Pasirinkti", "Iðeiti");
+									else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai\n{3abeff}• {ffffff}Rangø valdymas\n{3abeff}• {ffffff}Pavaduotojas", "Pasirinkti", "Iðeiti");
 								}
 								Dialog_ShowCallback(playerid, using inline dminimumas, DIALOG_STYLE_INPUT, "{ffffff}DVP » Darbo reikalavimai", "{3abeff}»{ffffff} Áveskite kiek laiko darbuotojas turi pradirbti per dienà [{3abeff}MIN{ffffff}]:", "Nustatyti", "Atgal");
 							}
@@ -6353,7 +6678,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 		                                        DarboInfo[MEDIKAI][dienosminimumasPAGYD] = strval(input1);
 											}
-											else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai", "Pasirinkti", "Iðeiti");
+											else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai\n{3abeff}• {ffffff}Rangø valdymas\n{3abeff}• {ffffff}Pavaduotojas", "Pasirinkti", "Iðeiti");
 										}
 										Dialog_ShowCallback(playerid, using inline dminimumaspagydymai, DIALOG_STYLE_INPUT, "{ffffff}DVP » Darbo reikalavimai", "{3abeff}»{ffffff} Áveskite kiek pagydymø darbuotojas turi surinkti per dienà:", "Nustatyti", "Atgal");
 									}
@@ -6371,7 +6696,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 		                                        DarboInfo[pInfo[playerid][direktorius]][dienosminimumasBAUDOS] = strval(inputt1);
 											}
-											else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai", "Pasirinkti", "Iðeiti");
+											else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai\n{3abeff}• {ffffff}Rangø valdymas\n{3abeff}• {ffffff}Pavaduotojas", "Pasirinkti", "Iðeiti");
 										}
 										Dialog_ShowCallback(playerid, using inline dminimumasbaudos, DIALOG_STYLE_INPUT, "{ffffff}DVP » Darbo reikalavimai", "{3abeff}»{ffffff} Áveskite kiek baudø darbuotojas turi surinkti per dienà:", "Nustatyti", "Atgal");
 									}
@@ -6442,13 +6767,664 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							}
 						}
 					}
-					else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai", "Pasirinkti", "Iðeiti");
+					else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai\n{3abeff}• {ffffff}Rangø valdymas\n{3abeff}• {ffffff}Pavaduotojas", "Pasirinkti", "Iðeiti");
 				}
 				switch(pInfo[playerid][direktorius])
 				{
 					case MEDIKAI: Dialog_ShowCallback(playerid, using inline dreikalavimai, DIALOG_STYLE_LIST, "{ffffff}DVP » Dienos reikalavimai", "{3abeff}•{ffffff} Pradirbimo per dienà\n{3abeff}•{ffffff} Pagydymø per dienà\n{3abeff}•{ffffff} Darbo patirties reikalavimas", "Toliau", "Atgal");
 					case POLICININKAI..ARMIJA: Dialog_ShowCallback(playerid, using inline dreikalavimai, DIALOG_STYLE_LIST, "{ffffff}DVP » Dienos reikalavimai", "{3abeff}•{ffffff} Pradirbimo per dienà\n{3abeff}•{ffffff} Baudø per dienà\n{3abeff}•{ffffff} Darbo patirties reikalavimas", "Toliau", "Atgal");
 				}
+			}
+			case 7: // Rangø valdymas
+			{	
+				inline dvp_ranguvaldymas(pid, did, resp, litem, string:input[])
+				{
+					#pragma unused pid, did, input
+					if(resp)
+					{
+						switch(litem)
+						{
+							case 0:
+							{
+								inline rangu_sarasas_dvp(pid1, did1, resp1, litem1, string:input1[])
+								{
+									#pragma unused pid1, did1, litem1, input1
+									if(resp1) Dialog_ShowCallback(playerid, using inline dvp_ranguvaldymas, DIALOG_STYLE_LIST, "{ffffff}DVP » Rangø valdymas", "{3abeff}•{ffffff} Rangø sàraðas\n{3abeff}•{ffffff} Valdyti rangus", "Toliau", "Atgal");
+								}
+								new str[1000];
+
+								format(str, sizeof(str), "Pirmas rangas: „%s“\nAntras rangas: „%s“\nTrecias rangas: „%s“\nKetvirtas rangas: „%s“\nPenktas rangas: „%s“\nÐeðtas rangas: „%s“",\
+									DarboInfo[pInfo[playerid][direktorius]][Rangas1], DarboInfo[pInfo[playerid][direktorius]][Rangas2], DarboInfo[pInfo[playerid][direktorius]][Rangas3], DarboInfo[pInfo[playerid][direktorius]][Rangas4], DarboInfo[pInfo[playerid][direktorius]][Rangas5], DarboInfo[pInfo[playerid][direktorius]][Rangas6]);
+								Dialog_ShowCallback(playerid, using inline rangu_sarasas_dvp, DIALOG_STYLE_MSGBOX, "{ffffff}DVP » Rangø sàraðas", str, "Atgal", "");
+							}
+							case 1:
+							{
+								inline rango_valdymas(pid2, did2, resp2, litem2, string:input2[])
+								{
+									#pragma unused pid2, did2, input2
+									if(resp2)
+									{
+										switch(litem2)
+										{
+											case 0..5:
+											{
+												inline rango_valdymas1(pid3, did3, resp3, litem3, string:input3[])
+												{
+													#pragma unused pid3, did3, input3
+													if(resp3)
+													{
+														switch(litem3)
+														{
+															case 0: // Keisti rango pavadinima
+															{
+																inline keistirango_pavadinima(pid4, did4, resp4, litem4, string:input4[])
+																{
+																	#pragma unused pid4, did4, litem4
+																	if(resp4)
+																	{
+																		if(strlen(input4) > 30) return MSG(playerid, RED, "- Rango pavadinimas gali bûti daugiausiai 30 simboliø");
+																		if(isnull(input4)) return MSG(playerid, RED, "- Rango pavadinimas negali bûti tuðèias");
+
+																		switch(litem2)
+																		{
+																			case 0: format(DarboInfo[pInfo[playerid][direktorius]][Rangas1], 30, "%s", input4);
+																			case 1: format(DarboInfo[pInfo[playerid][direktorius]][Rangas2], 30, "%s", input4);
+																			case 2: format(DarboInfo[pInfo[playerid][direktorius]][Rangas3], 30, "%s", input4);
+																			case 3: format(DarboInfo[pInfo[playerid][direktorius]][Rangas4], 30, "%s", input4);
+																			case 4: format(DarboInfo[pInfo[playerid][direktorius]][Rangas5], 30, "%s", input4);
+																			case 5: format(DarboInfo[pInfo[playerid][direktorius]][Rangas6], 30, "%s", input4);
+																		}
+																		SendFormat(playerid, GREEN, "+ Pakeitëte %i darbo rangà á %s", litem2+1, input4);
+																	}
+																	else return Dialog_ShowCallback(playerid, using inline dvp_ranguvaldymas, DIALOG_STYLE_LIST, "{ffffff}DVP » Rangø valdymas", "{3abeff}•{ffffff} Rangø sàraðas\n{3abeff}•{ffffff} Valdyti rangus", "Toliau", "Atgal");
+																}
+																Dialog_ShowCallback(playerid, using inline keistirango_pavadinima, DIALOG_STYLE_INPUT, "{ffffff}DVP » Rango pavadinimo keitimas", "{3abeff}»{ffffff} Áraðykite naujà rango pavadinimà [MAX 30 simb]", "Toliau", "Atgal");
+															}
+															case 1: // Keisti rango privilegijas
+															{
+																inline keistirango_privilegijas(pid5, did5, resp5, litem5, string:input5[])
+																{
+																	#pragma unused pid5, did5, input5	
+																	if(resp5)
+																	{
+																		switch(litem5)
+																		{
+																			case 0: // Iðvaizda
+																			{
+																				inline isvaizdos_keitimas(pid6, did6, resp6, litem6, string:input6[])
+																				{
+																					#pragma unused pid6, did6, input6
+																					if(resp6)
+																					{
+																						switch(litem6)
+																						{
+																							case 0: // Vyrø
+																							{
+																								inline isvaizdoskeitimasvyr(pid7, did7, resp7, litem7, string:input7[])
+																								{
+																									#pragma unused pid7, did7, input7
+																									if(resp7)
+																									{
+																										switch(litem2)
+																										{
+																											case 0:
+																											{
+																												switch(pInfo[playerid][direktorius])
+																												{
+																													case POLICININKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_male] = pdskinlistmale[litem7][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistmale[litem7][Skinas]);
+																												
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == POLICININKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 0)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistmale[litem7][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '0'", pdskinlistmale[litem7][Skinas], POLICININKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin1_male = '%i' WHERE jobID = '%i'", pdskinlistmale[litem7][Skinas], 2);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																													case MEDIKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_male] = medikuskinlistmale[litem7][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistmale[litem7][Skinas]);
+																												
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == MEDIKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 0)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistmale[litem7][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '0'", pdskinlistmale[litem7][Skinas], MEDIKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin1_male = '%i' WHERE jobID = '%i'", pdskinlistmale[litem7][Skinas], 1);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																												}
+																											}
+																											case 1:
+																											{
+																												switch(pInfo[playerid][direktorius])
+																												{
+																													case POLICININKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin2_male] = pdskinlistmale[litem7][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistmale[litem7][Skinas]);
+
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == POLICININKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 0)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistmale[litem7][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '0'", pdskinlistmale[litem7][Skinas], POLICININKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin2_male = '%i' WHERE jobID = '%i'", pdskinlistmale[litem7][Skinas], 2);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																													case MEDIKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_male] = medikuskinlistmale[litem7][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistmale[litem7][Skinas]);
+																												
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == MEDIKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 0)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistmale[litem7][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '0'", pdskinlistmale[litem7][Skinas], MEDIKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin2_male = '%i' WHERE jobID = '%i'", pdskinlistmale[litem7][Skinas], 1);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																												}
+																											}
+																											case 2:
+																											{
+																												switch(pInfo[playerid][direktorius])
+																												{
+																													case POLICININKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin3_male] = pdskinlistmale[litem7][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistmale[litem7][Skinas]);
+
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == POLICININKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 0)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistmale[litem7][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '0'", pdskinlistmale[litem7][Skinas], POLICININKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin3_male = '%i' WHERE jobID = '%i'", pdskinlistmale[litem7][Skinas], 2);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																													case MEDIKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_male] = medikuskinlistmale[litem7][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistmale[litem7][Skinas]);
+																												
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == MEDIKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 0)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistmale[litem7][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '0'", pdskinlistmale[litem7][Skinas], MEDIKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin3_male = '%i' WHERE jobID = '%i'", pdskinlistmale[litem7][Skinas], 1);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																												}
+																											}
+																											case 3:
+																											{
+																												switch(pInfo[playerid][direktorius])
+																												{
+																													case POLICININKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin4_male] = pdskinlistmale[litem7][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistmale[litem7][Skinas]);
+
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == POLICININKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 0)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistmale[litem7][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '0'", pdskinlistmale[litem7][Skinas], POLICININKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin4_male = '%i' WHERE jobID = '%i'", pdskinlistmale[litem7][Skinas], 2);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																													case MEDIKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_male] = medikuskinlistmale[litem7][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistmale[litem7][Skinas]);
+																												
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == MEDIKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 0)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistmale[litem7][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '0'", pdskinlistmale[litem7][Skinas], MEDIKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin4_male = '%i' WHERE jobID = '%i'", pdskinlistmale[litem7][Skinas], 1);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																												}
+																											}
+																											case 4:
+																											{
+																												switch(pInfo[playerid][direktorius])
+																												{
+																													case POLICININKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin5_male] = pdskinlistmale[litem7][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistmale[litem7][Skinas]);
+
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == POLICININKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 0)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistmale[litem7][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '0'", pdskinlistmale[litem7][Skinas], POLICININKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin5_male = '%i' WHERE jobID = '%i'", pdskinlistmale[litem7][Skinas], 2);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																													case MEDIKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_male] = medikuskinlistmale[litem7][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistmale[litem7][Skinas]);
+																												
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == MEDIKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 0)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistmale[litem7][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '0'", pdskinlistmale[litem7][Skinas], MEDIKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin5_male = '%i' WHERE jobID = '%i'", pdskinlistmale[litem7][Skinas], 1);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																												}
+																											}
+																											case 5:
+																											{
+																												switch(pInfo[playerid][direktorius])
+																												{
+																													case POLICININKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin6_male] = pdskinlistmale[litem7][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistmale[litem7][Skinas]);
+
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == POLICININKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 0)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistmale[litem7][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '0'", pdskinlistmale[litem7][Skinas], POLICININKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin6_male = '%i' WHERE jobID = '%i'", pdskinlistmale[litem7][Skinas], 2);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																													case MEDIKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_male] = medikuskinlistmale[litem7][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistmale[litem7][Skinas]);
+																												
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == MEDIKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 0)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistmale[litem7][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '0'", pdskinlistmale[litem7][Skinas], MEDIKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin6_male = '%i' WHERE jobID = '%i'", pdskinlistmale[litem7][Skinas], 1);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																								switch(pInfo[playerid][direktorius])
+																								{
+																									case MEDIKAI:{Dialog_ShowCallback(playerid, using inline isvaizdoskeitimasvyr, DIALOG_STYLE_LIST, "{ffffff}DVP » Rango iðvaizdos keitimas (Vyrø)", \
+																									"Iðvaizda 1 [274ID]\nIðvaizda 2 [275ID]\nIðvaizda 3 [276ID]", "Pasirinkti", "Atgal");}
+																									case POLICININKAI:{Dialog_ShowCallback(playerid, using inline isvaizdoskeitimasvyr, DIALOG_STYLE_LIST, "{ffffff}DVP » Rango iðvaizdos keitimas (Vyrø)", \
+																									"Iðvaizda 1 [280ID]\nIðvaizda 2 [281ID]\nIðvaizda 3 [282ID]\nIðvaizda 4 [283ID]\nIðvaizda 5 [284ID]\nIðvaizda 6 [288ID]\nIðvaizda 7 [300ID]\nIðvaizda 8 [301ID]\nIðvaizda 9 [302ID]\nIðvaizda 10 [310ID]\nIðvaizda 11 [311ID]", "Pasirinkti", "Atgal");}
+																								}
+																							}
+																							case 1: // Moterø
+																							{
+																								inline isvaizdoskeitimasmot(pid8, did8, resp8, litem8, string:input8[])
+																								{
+																									#pragma unused pid8, did8, input8
+																									if(resp8)
+																									{
+																										switch(litem2)
+																										{
+																											case 0:
+																											{
+																												switch(pInfo[playerid][direktorius])
+																												{
+																													case POLICININKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_female] = pdskinlistfemale[litem8][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistfemale[litem8][Skinas]);
+
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == POLICININKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 1)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistfemale[litem8][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '1'", pdskinlistfemale[litem8][Skinas], POLICININKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin1_female = '%i' WHERE jobID = '%i'", pdskinlistfemale[litem8][Skinas], 2);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																												}
+																											}
+																											case 1:
+																											{
+																												switch(pInfo[playerid][direktorius])
+																												{
+																													case POLICININKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_female] = pdskinlistfemale[litem8][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistfemale[litem8][Skinas]);
+
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == POLICININKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 1)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistfemale[litem8][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '1'", pdskinlistfemale[litem8][Skinas], POLICININKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin2_female = '%i' WHERE jobID = '%i'", pdskinlistfemale[litem8][Skinas], 2);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																												}
+																											}
+																											case 2:
+																											{
+																												switch(pInfo[playerid][direktorius])
+																												{
+																													case POLICININKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_female] = pdskinlistfemale[litem8][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistfemale[litem8][Skinas]);
+
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == POLICININKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 1)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistfemale[litem8][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '1'", pdskinlistfemale[litem8][Skinas], POLICININKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin3_female = '%i' WHERE jobID = '%i'", pdskinlistfemale[litem8][Skinas], 2);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																												}
+																											}
+																											case 3:
+																											{
+																												switch(pInfo[playerid][direktorius])
+																												{
+																													case POLICININKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_female] = pdskinlistfemale[litem8][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistfemale[litem8][Skinas]);
+
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == POLICININKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 1)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistfemale[litem8][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '1'", pdskinlistfemale[litem8][Skinas], POLICININKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin4_female = '%i' WHERE jobID = '%i'", pdskinlistfemale[litem8][Skinas], 2);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																												}
+																											}
+																											case 4:
+																											{
+																												switch(pInfo[playerid][direktorius])
+																												{
+																													case POLICININKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_female] = pdskinlistfemale[litem8][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistfemale[litem8][Skinas]);
+
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == POLICININKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 1)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistfemale[litem8][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '1'", pdskinlistfemale[litem8][Skinas], POLICININKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin5_female = '%i' WHERE jobID = '%i'", pdskinlistfemale[litem8][Skinas], 2);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																												}
+																											}
+																											case 5:
+																											{
+																												switch(pInfo[playerid][direktorius])
+																												{
+																													case POLICININKAI:
+																													{
+																														DarboInfo[pInfo[playerid][direktorius]][Skin1_female] = pdskinlistfemale[litem8][Skinas];
+
+																														SendFormat(playerid, GREEN, "+ Pakeitëte %i rango iðvaizdà á %iID", litem2+1, pdskinlistfemale[litem8][Skinas]);
+
+																														foreach(new i : Player)
+																														{
+																															if(online[i])
+																															{
+																																if(pInfo[i][darbas] == POLICININKAI && pInfo[i][DarboRangas] == litem2+1 && pInfo[i][lytis] == 1)
+																																{
+																																	pInfo[i][uniforma] = pdskinlistfemale[litem8][Skinas];
+																																	if(pInfo[playerid][wUniform]){SetPlayerSkin(i, pInfo[i][uniforma]);}
+																																}
+																															}
+																														}
+																														mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET uniform = '%i' WHERE darbas = '%i' AND gender = '1'", pdskinlistfemale[litem8][Skinas], POLICININKAI);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+																														mysql_format(connectionHandle, query, 140, "UPDATE darbai SET Skin6_female = '%i' WHERE jobID = '%i'", pdskinlistfemale[litem8][Skinas], 2);
+																														mysql_tquery(connectionHandle, query, "SendQuery", "");
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																								switch(pInfo[playerid][direktorius])
+																								{
+																									case MEDIKAI:{return MSG(playerid, RED, "- Medikai turi tik vienà moteriðkà iðvaizdà");}
+																									case ARMIJA:{return MSG(playerid, RED, "- Armija turi tik vienà moteriðkà iðvaizdà");}
+																									case POLICININKAI:{Dialog_ShowCallback(playerid, using inline isvaizdoskeitimasmot, DIALOG_STYLE_LIST, "{ffffff}DVP » Rango iðvaizdos keitimas (Vyrø)", \
+																									"Iðvaizda 1 [306ID]\nIðvaizda 2 [307ID]\nIðvaizda 3 [309ID]", "Pasirinkti", "Atgal");}
+																								}
+																							}
+																						}
+																					}
+																				}
+																				if(pInfo[playerid][direktorius] == ARMIJA) {return MSG(playerid, RED, "- Armija turi tik vienà iðvaizdà, dëja negalite keisti iðvaizdos");}
+																				Dialog_ShowCallback(playerid, using inline isvaizdos_keitimas, DIALOG_STYLE_LIST, "{ffffff}DVP » Rango iðvaizdos keitimas", "Vyrø\nMoterø", "Pasirinkti", "Atgal");
+																			}
+																			case 1:
+																			{
+
+																			}
+																			case 2:
+																			{
+
+																			}
+																		}
+																	}
+																}
+																Dialog_ShowCallback(playerid, using inline keistirango_privilegijas, DIALOG_STYLE_LIST, "{ffffff}DVP » Rango nustatymai", "{3abeff}•{ffffff} Iðvaizda\n{3abeff}•{ffffff} Transportas\n{3abeff}•{ffffff} Darbo komandos", "Toliau", "Atgal");
+															}
+														}
+													}
+													else return Dialog_ShowCallback(playerid, using inline rango_valdymas, DIALOG_STYLE_LIST, "{ffffff}DVP » Rangø valdymas", "{3abeff}•{ffffff} Pirmo rango valdymas\n{3abeff}•{ffffff} Antro rango valdymas\n{3abeff}•{ffffff} Treèio rango valdymas\n{3abeff}•{ffffff} Ketvirto rango valdymas\n{3abeff}•{ffffff} Penkto rango valdymas\n{3abeff}•{ffffff} Ðeðto rango valdymas", "Toliau", "Atgal");
+												}
+												Dialog_ShowCallback(playerid, using inline rango_valdymas1, DIALOG_STYLE_LIST, "{ffffff}DVP » Rangø valdymas", "{3abeff}•{ffffff} Keisti rango vardà\n{3abeff}•{ffffff} Rango nustatymai", "Toliau", "Atgal");
+											}
+										}
+									}
+									else return Dialog_ShowCallback(playerid, using inline dvp_ranguvaldymas, DIALOG_STYLE_LIST, "{ffffff}DVP » Rangø valdymas", "{3abeff}•{ffffff} Rangø sàraðas\n{3abeff}•{ffffff} Valdyti rangus", "Toliau", "Atgal");
+								}
+								Dialog_ShowCallback(playerid, using inline rango_valdymas, DIALOG_STYLE_LIST, "{ffffff}DVP » Rangø valdymas", "\
+									{3abeff}•{ffffff} Pirmo rango valdymas\n{3abeff}•{ffffff} Antro rango valdymas\n{3abeff}•{ffffff} Treèio rango valdymas\n{3abeff}•{ffffff} Ketvirto rango valdymas\n{3abeff}•{ffffff} Penkto rango valdymas\n{3abeff}•{ffffff} Ðeðto rango valdymas", "Toliau", "Atgal");
+							}
+						}
+					}
+					else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai\n{3abeff}• {ffffff}Rangø valdymas\n{3abeff}• {ffffff}Pavaduotojas", "Pasirinkti", "Iðeiti");
+				}
+				Dialog_ShowCallback(playerid, using inline dvp_ranguvaldymas, DIALOG_STYLE_LIST, "{ffffff}DVP » Rangø valdymas", "{3abeff}•{ffffff} Rangø sàraðas\n{3abeff}•{ffffff} Valdyti rangus", "Toliau", "Atgal");
+			}
+			case 8: // Pavaduotojas
+			{
+
 			}
 		}
 	}
@@ -6459,9 +7435,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			new string[31];
 			format(string, sizeof(string), "{ffffff}DVP » %s", DarbuotojuVardai[pInfo[playerid][direktorius]][listitem]);
     		pInfo[playerid][ziuridarbuotoja] = listitem;
-    		ShowPlayerDialog(playerid, kontrole, DIALOG_STYLE_LIST, string, "{3abeff}•{ffffff} Darbuotojo informacija\n{3abeff}•{ffffff} Áspëti darbuotojà\n{3abeff}•{ffffff} Nuimti áspëjimà", "Toliau", "Atgal");
+    		ShowPlayerDialog(playerid, kontrole, DIALOG_STYLE_LIST, string, "{3abeff}•{ffffff} Darbuotojo informacija\n{3abeff}•{ffffff} Áspëti darbuotojà\n{3abeff}•{ffffff} Nuimti áspëjimà\n{3abeff}•{ffffff} Uþdëti rangà", "Toliau", "Atgal");
 		}
-		else ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai", "Pasirinkti", "Iðeiti");
+		else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai\n{3abeff}• {ffffff}Rangø valdymas\n{3abeff}• {ffffff}Pavaduotojas", "Pasirinkti", "Iðeiti");
 		return 1;
 	}
 	if(dialogid == kontrole)
@@ -6530,7 +7506,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							if(isnull(input)) return MSG(playerid, RED, "- Laukelis negali bûti tuðèias!");
 							if(strlen(input) > 24) return MSG(playerid, RED, "- Prieþastis negali bûti ilgesnë nei 24 simboliai.");
 
-							if(id != INVALID_PLAYER_ID)
+							if(id != INVALID_PLAYER_ID && online[id])
 							{
 								pInfo[id][disp] += 1;
 								if(pInfo[id][disp] < 3)
@@ -6630,6 +7606,143 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				format(string1, sizeof(string1), "{ffffff}Norëdami nuimti áspëjimà darbuotojui {F0E678}%s{ffffff} áveskite {F0E678}prieþastá {ffffff}apaèioje:", DarbuotojuVardai[pInfo[playerid][direktorius]][pInfo[playerid][ziuridarbuotoja]]);
 				Dialog_ShowCallback(playerid, using inline nuimtiispdarbuotojui, DIALOG_STYLE_INPUT, string, string1, "Nuimti", "Atgal");
 			}
+			case 3: // Uþdëti rangà
+			{
+				inline uzdetiranga_darbuotojui(pid, did, resp, litem, string:input[])
+				{
+					#pragma unused pid, did, input
+					if(resp)
+					{
+						new id = GetPlayeridMid(DarbuotojuVardai[pInfo[playerid][direktorius]][pInfo[playerid][ziuridarbuotoja]]);
+						switch(litem)
+						{
+							case 0:
+							{
+								if(id != INVALID_PLAYER_ID && online[id])
+								{
+									pInfo[id][DarboRangas] = 1;
+
+									if(pInfo[id][lytis] == 0) pInfo[id][uniforma] = DarboInfo[pInfo[id][darbas]][Skin1_male];
+									else if(pInfo[id][lytis] == 1) pInfo[id][uniforma] = DarboInfo[pInfo[id][darbas]][Skin1_female];
+
+									if(pInfo[id][wUniform]) SetPlayerSkin(id, pInfo[id][uniforma]);
+
+									SendFormat(id, -1, "{BC7BC7}»{ffffff} Direktorius {BC7BC7}%s{ffffff} uþdëjo jums {BC7BC7}%i{ffffff} rangà {BC7BC7}„%s“{ffffff}", playerName[playerid], 1, DarboInfo[pInfo[id][darbas]][Rangas1]);
+									SendFormat(playerid, -1, "{BC7BC7}»{ffffff} Uþdëjote darbuotojui {BC7BC7}%s{ffffff} {BC7BC7}%i{ffffff} rangà {BC7BC7}„%s“{ffffff}", playerName[id], 1, DarboInfo[pInfo[id][darbas]][Rangas1]);
+								}
+								else
+								{
+                					mysql_format(connectionHandle, query, 140, "SELECT Rangas, gender FROM zaidejai WHERE `vardas` = '%e'", DarbuotojuVardai[pInfo[playerid][direktorius]][pInfo[playerid][ziuridarbuotoja]]);
+               						mysql_tquery(connectionHandle, query, "OndirektoriusSetRank", "ii", playerid, litem+1);
+								}
+							}
+							case 1:
+							{
+								if(id != INVALID_PLAYER_ID && online[id])
+								{
+									pInfo[id][DarboRangas] = 2;
+
+									if(pInfo[id][lytis] == 0) pInfo[id][uniforma] = DarboInfo[pInfo[id][darbas]][Skin2_male];
+									else if(pInfo[id][lytis] == 1) pInfo[id][uniforma] = DarboInfo[pInfo[id][darbas]][Skin2_female];
+
+									if(pInfo[id][wUniform]) SetPlayerSkin(id, pInfo[id][uniforma]);
+
+									SendFormat(id, -1, "{BC7BC7}»{ffffff} Direktorius {BC7BC7}%s{ffffff} uþdëjo jums {BC7BC7}%i{ffffff} rangà {BC7BC7}„%s“{ffffff}", playerName[playerid], 2, DarboInfo[pInfo[id][darbas]][Rangas2]);
+									SendFormat(playerid, -1, "{BC7BC7}»{ffffff} Uþdëjote darbuotojui {BC7BC7}%s{ffffff} {BC7BC7}%i{ffffff} rangà {BC7BC7}„%s“{ffffff}", playerName[id], 2, DarboInfo[pInfo[id][darbas]][Rangas2]);
+								}
+								else
+								{
+                					mysql_format(connectionHandle, query, 140, "SELECT Rangas, gender FROM zaidejai WHERE `vardas` = '%e'", DarbuotojuVardai[pInfo[playerid][direktorius]][pInfo[playerid][ziuridarbuotoja]]);
+               						mysql_tquery(connectionHandle, query, "OndirektoriusSetRank", "ii", playerid, litem+1);
+								}
+							}
+							case 2:
+							{
+								if(id != INVALID_PLAYER_ID && online[id])
+								{
+									pInfo[id][DarboRangas] = 3;
+
+									if(pInfo[id][lytis] == 0) pInfo[id][uniforma] = DarboInfo[pInfo[id][darbas]][Skin3_male];
+									else if(pInfo[id][lytis] == 1) pInfo[id][uniforma] = DarboInfo[pInfo[id][darbas]][Skin3_female];
+
+									if(pInfo[id][wUniform]) SetPlayerSkin(id, pInfo[id][uniforma]);
+
+									SendFormat(id, -1, "{BC7BC7}»{ffffff} Direktorius {BC7BC7}%s{ffffff} uþdëjo jums {BC7BC7}%i{ffffff} rangà {BC7BC7}„%s“{ffffff}", playerName[playerid], 3, DarboInfo[pInfo[id][darbas]][Rangas3]);
+									SendFormat(playerid, -1, "{BC7BC7}»{ffffff} Uþdëjote darbuotojui {BC7BC7}%s{ffffff} {BC7BC7}%i{ffffff} rangà {BC7BC7}„%s“{ffffff}", playerName[id], 3, DarboInfo[pInfo[id][darbas]][Rangas3]);
+								}
+								else
+								{
+                					mysql_format(connectionHandle, query, 140, "SELECT Rangas, gender FROM zaidejai WHERE `vardas` = '%e'", DarbuotojuVardai[pInfo[playerid][direktorius]][pInfo[playerid][ziuridarbuotoja]]);
+               						mysql_tquery(connectionHandle, query, "OndirektoriusSetRank", "ii", playerid, litem+1);
+								}
+							}
+							case 3:
+							{
+								if(id != INVALID_PLAYER_ID && online[id])
+								{
+									pInfo[id][DarboRangas] = 4;
+
+									if(pInfo[id][lytis] == 0) pInfo[id][uniforma] = DarboInfo[pInfo[id][darbas]][Skin4_male];
+									else if(pInfo[id][lytis] == 1) pInfo[id][uniforma] = DarboInfo[pInfo[id][darbas]][Skin4_female];
+
+									if(pInfo[id][wUniform]) SetPlayerSkin(id, pInfo[id][uniforma]);
+
+									SendFormat(id, -1, "{BC7BC7}»{ffffff} Direktorius {BC7BC7}%s{ffffff} uþdëjo jums {BC7BC7}%i{ffffff} rangà {BC7BC7}„%s“{ffffff}", playerName[playerid], 4, DarboInfo[pInfo[id][darbas]][Rangas4]);
+									SendFormat(playerid, -1, "{BC7BC7}»{ffffff} Uþdëjote darbuotojui {BC7BC7}%s{ffffff} {BC7BC7}%i{ffffff} rangà {BC7BC7}„%s“{ffffff}", playerName[id], 4, DarboInfo[pInfo[id][darbas]][Rangas4]);
+								}
+								else
+								{
+                					mysql_format(connectionHandle, query, 140, "SELECT Rangas, gender FROM zaidejai WHERE `vardas` = '%e'", DarbuotojuVardai[pInfo[playerid][direktorius]][pInfo[playerid][ziuridarbuotoja]]);
+               						mysql_tquery(connectionHandle, query, "OndirektoriusSetRank", "ii", playerid, litem+1);
+								}
+							}	
+							case 4:
+							{
+								if(id != INVALID_PLAYER_ID && online[id])
+								{
+									pInfo[id][DarboRangas] = 5;
+
+									if(pInfo[id][lytis] == 0) pInfo[id][uniforma] = DarboInfo[pInfo[id][darbas]][Skin5_male];
+									else if(pInfo[id][lytis] == 1) pInfo[id][uniforma] = DarboInfo[pInfo[id][darbas]][Skin5_female];
+
+									if(pInfo[id][wUniform]) SetPlayerSkin(id, pInfo[id][uniforma]);
+
+									SendFormat(id, -1, "{BC7BC7}»{ffffff} Direktorius {BC7BC7}%s{ffffff} uþdëjo jums {BC7BC7}%i{ffffff} rangà {BC7BC7}„%s“{ffffff}", playerName[playerid], 5, DarboInfo[pInfo[id][darbas]][Rangas5]);
+									SendFormat(playerid, -1, "{BC7BC7}»{ffffff} Uþdëjote darbuotojui {BC7BC7}%s{ffffff} {BC7BC7}%i{ffffff} rangà {BC7BC7}„%s“{ffffff}", playerName[id], 5, DarboInfo[pInfo[id][darbas]][Rangas5]);
+								}
+								else
+								{
+                					mysql_format(connectionHandle, query, 140, "SELECT Rangas, gender FROM zaidejai WHERE `vardas` = '%e'", DarbuotojuVardai[pInfo[playerid][direktorius]][pInfo[playerid][ziuridarbuotoja]]);
+               						mysql_tquery(connectionHandle, query, "OndirektoriusSetRank", "ii", playerid, litem+1);
+								}
+							}
+							case 5:
+							{
+								if(id != INVALID_PLAYER_ID && online[id])
+								{
+									pInfo[id][DarboRangas] = 6;
+
+									if(pInfo[id][lytis] == 0) pInfo[id][uniforma] = DarboInfo[pInfo[id][darbas]][Skin6_male];
+									else if(pInfo[id][lytis] == 1) pInfo[id][uniforma] = DarboInfo[pInfo[id][darbas]][Skin6_female];
+
+									if(pInfo[id][wUniform]) SetPlayerSkin(id, pInfo[id][uniforma]);
+
+									SendFormat(id, -1, "{BC7BC7}»{ffffff} Direktorius {BC7BC7}%s{ffffff} uþdëjo jums {BC7BC7}%i{ffffff} rangà {BC7BC7}„%s“{ffffff}", playerName[playerid], 6, DarboInfo[pInfo[id][darbas]][Rangas6]);
+									SendFormat(playerid, -1, "{BC7BC7}»{ffffff} Uþdëjote darbuotojui {BC7BC7}%s{ffffff} {BC7BC7}%i{ffffff} rangà {BC7BC7}„%s“{ffffff}", playerName[id], 6, DarboInfo[pInfo[id][darbas]][Rangas6]);
+								}
+								else
+								{
+                					mysql_format(connectionHandle, query, 140, "SELECT Rangas, gender FROM zaidejai WHERE `vardas` = '%e'", DarbuotojuVardai[pInfo[playerid][direktorius]][pInfo[playerid][ziuridarbuotoja]]);
+               						mysql_tquery(connectionHandle, query, "OndirektoriusSetRank", "ii", playerid, litem+1);
+								}
+							}
+						}
+					}
+				}
+				new string[50];
+				format(string, sizeof(string), "{ffffff}DVP » Uþdëti rangà %s",DarbuotojuVardai[pInfo[playerid][direktorius]][pInfo[playerid][ziuridarbuotoja]]);
+				Dialog_ShowCallback(playerid, using inline uzdetiranga_darbuotojui, DIALOG_STYLE_LIST, string, "• Pirmà rangà\n• Antrà rangà\n• Treèià rangà\n• Ketvirtà rangà\n• Penktà rangà", "Uþdëti", "Atgal");
+			}
 		}
 		return 1;
 	}
@@ -6681,12 +7794,12 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 			pInfo[id][pakvietimastimer] = gettime() + 300;
 		}
-		else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai", "Pasirinkti", "Iðeiti");
+		else return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai\n{3abeff}• {ffffff}Rangø valdymas\n{3abeff}• {ffffff}Pavaduotojas", "Pasirinkti", "Iðeiti");
 		return 1;
 	}
 	if(dialogid == dfondas)
 	{
-		if(!response) return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai", "Pasirinkti", "Iðeiti");
+		if(!response) return ShowPlayerDialog(playerid, dvp, DIALOG_STYLE_LIST, "{ffffff}Direktoriaus valdymo panelë", "{3abeff}• {ffffff}Darbuotojø sàraðas\n{3abeff}• {ffffff}Priimti darbuotojà\n{3abeff}• {ffffff}Darbo þinutë\n{3abeff}• {ffffff}Darbo fondas\n{3abeff}• {ffffff}Atstatyti darbines tr. priemones\n{3abeff}• {ffffff}Darbo laikas\n{3abeff}• {ffffff}Darbo reikalavimai\n{3abeff}• {ffffff}Rangø valdymas\n{3abeff}• {ffffff}Pavaduotojas", "Pasirinkti", "Iðeiti");
 
 		switch(listitem)
 		{
@@ -6896,6 +8009,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 	            {
 	                case 1..5:
                  	{
+						if(pInfo[giveplayerid][Muted] > 0) return MSG(playerid, RED, "- Þaidëjas jau yra uþtildytas");
                 		format(String, sizeof(String),
 						"{75B244}••• {FFFFFF}Administratorius {33B7D3}%s {ffffff}uþtildë þaidëjà {33B7D3}%s{ffffff}!", playerName[playerid], playerName[giveplayerid]);
 						SendClientMessageToAll(-1, String);
@@ -6906,6 +8020,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 						pInfo[giveplayerid][Muted] = gettime() + (FAL[listitem][bLaikas] * 60);
 						MuteTime[giveplayerid] = SetTimerEx("Mute", 1000, true, "i",giveplayerid);
+						format(pInfo[giveplayerid][KasUztilde], 24, "%s'", playerName[playerid]);
+
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET mutelaikas = '%i', perma_mute = '0', adminmutename = '%e' WHERE vardas = '%e'", pInfo[giveplayerid][Muted], playerName[playerid], playerName[giveplayerid]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
 					}
 	                case 7..10:
                  	{
@@ -6917,7 +8035,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						"{75B244}••• {FFFFFF}Prieþastis: {33B7D3}%s{ffffff}!", FAL[listitem][Bausme]);
 						SendClientMessageToAll(-1, String);
 
-						Kick(giveplayerid);
+						_Kick(giveplayerid);
 					}
 	            }
 	        }
@@ -6934,6 +8052,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 	            {
 	                case 1..5:
                  	{
+						if(pInfo[playerid2][Muted] > 0) return MSG(playerid, RED, "- Þaidëjas jau yra uþtildytas");
                 		format(String, sizeof(String),
 						"{75B244}••• {FFFFFF}Administratorius {33B7D3}%s {ffffff}uþtildë þaidëjà {33B7D3}%s{ffffff}!", playerName[playerid], playerName[playerid2]);
 						SendClientMessageToAll(-1, String);
@@ -6944,6 +8063,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 						pInfo[playerid2][Muted] = gettime() + (TAL[listitem][bLaikas] * 60);
 						MuteTime[playerid2] = SetTimerEx("Mute", 1000, true, "i",playerid2);
+						format(pInfo[playerid2][KasUztilde], 24, "%s'", playerName[playerid]);
+
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET mutelaikas = '%i', perma_mute = '0', adminmutename = '%e' WHERE vardas = '%e'", pInfo[playerid2][Muted], playerName[playerid], playerName[playerid2]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
 					}
 	                case 8..10:
                  	{
@@ -6955,7 +8078,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						"{75B244}••• {FFFFFF}Prieþastis: {33B7D3}%s{ffffff}!", TAL[listitem][Bausme]);
 						SendClientMessageToAll(-1, String);
 
-						Kick(playerid2);
+						_Kick(playerid2);
 					}
 	                case 13..16:
                  	{
@@ -6981,6 +8104,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 	            {
 	                case 1..5:
                  	{
+						if(pInfo[playerid2][Muted] > 0) return MSG(playerid, RED, "- Þaidëjas jau yra uþtildytas");
                 		format(String, sizeof(String),
 						"{75B244}••• {FFFFFF}Administratorius {33B7D3}%s {ffffff}uþtildë þaidëjà {33B7D3}%s{ffffff}!", playerName[playerid], playerName[playerid2]);
 						SendClientMessageToAll(-1, String);
@@ -6991,6 +8115,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 						pInfo[playerid2][Muted] = gettime() + (TAL[listitem][bLaikas] * 60);
 						MuteTime[playerid2] = SetTimerEx("Mute", 1000, true, "i",playerid2);
+						format(pInfo[playerid2][KasUztilde], 24, "%s'", playerName[playerid]);
+
+						mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET mutelaikas = '%i', perma_mute = '0', adminmutename = '%e' WHERE vardas = '%e'", pInfo[playerid2][Muted], playerName[playerid], playerName[playerid2]);
+						mysql_tquery(connectionHandle, query, "SendQuery", "");
 					}
 	                case 8..10:
                  	{
@@ -7053,6 +8181,63 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		   AHS[playerid][PaklausePagalbos] = true;
 		}
 	}
+	return 1;
+}
+
+function OndirektoriusSetRank(playerid, rank)
+{
+
+	if(cache_num_rows() > 0)
+	{
+		new rangas, genderis;
+
+		cache_get_value_index_int(0, 0, rangas);
+
+		if(rangas == rank) return SendFormat(playerid, RED, "- Þaidëjas jau yra %i rango", rank);
+
+		cache_get_value_index_int(0, 1, genderis);
+
+		new uniformakokia;
+
+		switch(rank)
+		{
+			case 1:
+			{
+				if(genderis == 0) uniformakokia = DarboInfo[pInfo[playerid][direktorius]][Skin1_male];
+				else uniformakokia = DarboInfo[pInfo[playerid][direktorius]][Skin1_female];
+			}
+			case 2:
+			{
+				if(genderis == 0) uniformakokia = DarboInfo[pInfo[playerid][direktorius]][Skin2_male];
+				else uniformakokia = DarboInfo[pInfo[playerid][direktorius]][Skin2_female];
+			}
+			case 3:
+			{
+				if(genderis == 0) uniformakokia = DarboInfo[pInfo[playerid][direktorius]][Skin3_male];
+				else uniformakokia = DarboInfo[pInfo[playerid][direktorius]][Skin3_female];
+			}
+			case 4:
+			{
+				if(genderis == 0) uniformakokia = DarboInfo[pInfo[playerid][direktorius]][Skin4_male];
+				else uniformakokia = DarboInfo[pInfo[playerid][direktorius]][Skin4_female];
+			}
+			case 5:
+			{
+				if(genderis == 0) uniformakokia = DarboInfo[pInfo[playerid][direktorius]][Skin5_male];
+				else uniformakokia = DarboInfo[pInfo[playerid][direktorius]][Skin5_female];
+			}
+			case 6:
+			{
+				if(genderis == 0) uniformakokia = DarboInfo[pInfo[playerid][direktorius]][Skin6_male];
+				else uniformakokia = DarboInfo[pInfo[playerid][direktorius]][Skin6_female];
+			}
+		}
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET Rangas = '%i', uniforma = '%i' WHERE vardas = '%e'", rank, uniformakokia, DarbuotojuVardai[pInfo[playerid][direktorius]][pInfo[playerid][ziuridarbuotoja]]);	
+		mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+		SendFormat(playerid, GREEN, "Uþdëjote %i þaidëjui ");
+	}
+	else printf("ERROR SKIRTIRANGAS");
 	return 1;
 }
 
@@ -7174,6 +8359,53 @@ function OnPlayerRequestWorkersList(playerid)
 	return 1;
 }
 
+function OnPickupSumoketAdmBauda(playerid)
+{
+	if(cache_num_rows() > 0)
+	{	
+		new rows;
+		cache_get_row_count(rows);
+		new fstr[1000], str[500];
+		for(new row=0;row<rows; row++)
+		{
+			cache_get_value_index(row, 1, BauduInfo[playerid][row][BaudosVardas], 120);
+
+			cache_get_value_index(row, 2, BauduInfo[playerid][row][kamskirta], 24);
+
+			cache_get_value_index(row, 3, BauduInfo[playerid][row][kasisrase], 24);
+
+			cache_get_value_index(row, 4, BauduInfo[playerid][row][kadaisrase], 31);
+
+			cache_get_value_index_int(row, 5, BauduInfo[playerid][row][baudos_suma]);
+
+			format(str, sizeof(str), "{ffffff}Numeris - Baudos pavadinimas - Kam skirta - Kas iðraðë - Kada iðraðyta - Baudos suma\n");
+			
+			strcat(fstr, str);
+
+			format(str, sizeof(str), "{89BE8D}%i.{ffffff} %s - %s - %s - %s - {89BE8D}%s€{ffffff}\n", \
+				row+1, BauduInfo[playerid][row][BaudosVardas], BauduInfo[playerid][row][kamskirta], BauduInfo[playerid][row][kasisrase], BauduInfo[playerid][row][kadaisrase], konvertuoti_pinigus(BauduInfo[playerid][row][baudos_suma]));
+			strcat(fstr, str);
+
+			MSG(playerid, GREEN, "+ Sëkmingai sumokëjote baudà");
+		}
+		inline sumoket_adm_bauda(pid, did, resp, litem, string:input[])
+		{
+			#pragma unused pid, did, input
+			if(resp)
+			{
+				if(litem==0) return Dialog_ShowCallback(playerid, using inline sumoket_adm_bauda, DIALOG_STYLE_LIST, "Policijos departamentas -> Baudos mokëjimas", fstr, "Sumokëti", "Iðeiti");
+				if(pInfo[playerid][pinigai] < BauduInfo[playerid][litem-1][baudos_suma]) return MSG(playerid, RED, "- Neturite pakankamai pinigø baudai sumokëti");
+				pInfo[playerid][pinigai] -= BauduInfo[playerid][litem-1][baudos_suma];
+				mysql_format(connectionHandle, query, 140, "DELETE FROM zaideju_baudos_administracines WHERE kamskirta = '%e' AND baudos_suma = '%i' LIMIT 1;", playerName[playerid], BauduInfo[playerid][litem-1][baudos_suma]);
+				mysql_tquery(connectionHandle, query, "SendQuery", "");
+			}
+		}
+		Dialog_ShowCallback(playerid, using inline sumoket_adm_bauda, DIALOG_STYLE_LIST, "{ffffff}Policijos departamentas -> Baudos mokëjimas", fstr, "Sumokëti", "Iðeiti");
+	}
+	else return MSG(playerid, RED, "- Jûs neturite baudø");
+	return 1;
+}
+
 public OnPlayerClickPlayer(playerid, clickedplayerid, source)
 {
 	ShowInfo(clickedplayerid, playerid);
@@ -7230,7 +8462,6 @@ stock Reset(playerid)
 	pInfo[playerid][kvieciaID] = 0;
 	pInfo[playerid][viskvmed] = false;
 	pInfo[playerid][viskvpd] = false;
-	pInfo[playerid][dpriziuretojas] = 0;
 	pInfo[playerid][LaikoLigoninej] = 0;
 	pInfo[playerid][pagydymai] = 0;
 	pInfo[playerid][baudos] = 0;
@@ -7246,7 +8477,7 @@ stock Reset(playerid)
 	pInfo[playerid][kvieciaID] = 0;
 	pInfo[playerid][viskvmed] = false;
 	pInfo[playerid][viskvpd] = false;
-	pInfo[playerid][dpriziuretojas] = 0;
+	pInfo[playerid][priziuretojas] = 0;
 	SetPlayerInterior(playerid, 0);
 }
 
@@ -7510,6 +8741,96 @@ stock randomEx(min, max)
     return rand;
 }
 
+stock ShowLogotipas(playerid){
+	for(new i = 0; i < 3; i++){
+		TextDrawShowForPlayer(playerid, Logotipas[i]);
+	}
+	return 1;
+}
+
+stock ShowDataIrLaikas(playerid){
+	TextDrawShowForPlayer(playerid, Laikrodis[0]);
+	TextDrawShowForPlayer(playerid, SiandienosData[0]);
+	return 1;
+}
+
+stock LoadTextDraws(){
+	/* LOGOTIPAS-----------------------------------------------------------*/
+	Logotipas[0] = TextDrawCreate(125.000000, 328.000000, "ld_grav:leaf");
+	TextDrawFont(Logotipas[0], 4);
+	TextDrawLetterSize(Logotipas[0], 0.600000, 2.000000);
+	TextDrawTextSize(Logotipas[0], 16.500000, 10.500000);
+	TextDrawSetOutline(Logotipas[0], 1);
+	TextDrawSetShadow(Logotipas[0], 0);
+	TextDrawAlignment(Logotipas[0], 1);
+	TextDrawColor(Logotipas[0], -1);
+	TextDrawBackgroundColor(Logotipas[0], 255);
+	TextDrawBoxColor(Logotipas[0], 50);
+	TextDrawUseBox(Logotipas[0], 1);
+	TextDrawSetProportional(Logotipas[0], 1);
+	TextDrawSetSelectable(Logotipas[0], 0);
+
+	Logotipas[1] = TextDrawCreate(49.000000, 325.000000, "LERG.LT");
+	TextDrawFont(Logotipas[1], 1);
+	TextDrawLetterSize(Logotipas[1], 0.600000, 1.549998);
+	TextDrawTextSize(Logotipas[1], 400.000000, 17.000000);
+	TextDrawSetOutline(Logotipas[1], 1);
+	TextDrawSetShadow(Logotipas[1], 0);
+	TextDrawAlignment(Logotipas[1], 1);
+	TextDrawColor(Logotipas[1], -16776961);
+	TextDrawBackgroundColor(Logotipas[1], -1);
+	TextDrawBoxColor(Logotipas[1], 50);
+	TextDrawUseBox(Logotipas[1], 0);
+	TextDrawSetProportional(Logotipas[1], 1);
+	TextDrawSetSelectable(Logotipas[1], 0);
+
+	Logotipas[2] = TextDrawCreate(29.000000, 328.000000, "ld_grav:leaf");
+	TextDrawFont(Logotipas[2], 4);
+	TextDrawLetterSize(Logotipas[2], 0.600000, 2.000000);
+	TextDrawTextSize(Logotipas[2], 16.500000, 10.500000);
+	TextDrawSetOutline(Logotipas[2], 1);
+	TextDrawSetShadow(Logotipas[2], 0);
+	TextDrawAlignment(Logotipas[2], 1);
+	TextDrawColor(Logotipas[2], -1);
+	TextDrawBackgroundColor(Logotipas[2], 255);
+	TextDrawBoxColor(Logotipas[2], 50);
+	TextDrawUseBox(Logotipas[2], 1);
+	TextDrawSetProportional(Logotipas[2], 1);
+	TextDrawSetSelectable(Logotipas[2], 0);
+	/* LOGOTIPAS-----------------------------------------------------------*/
+	//
+
+	/*LAIKRODIS------------------------------------------------------------*/
+
+	Laikrodis[0] = TextDrawCreate(577.000000, 20.000000, "00:00");
+	TextDrawFont(Laikrodis[0], 3);
+	TextDrawLetterSize(Laikrodis[0], 0.441666, 1.299998);
+	TextDrawTextSize(Laikrodis[0], 400.000000, 17.000000);
+	TextDrawSetOutline(Laikrodis[0], 1);
+	TextDrawSetShadow(Laikrodis[0], 0);
+	TextDrawAlignment(Laikrodis[0], 2);
+	TextDrawColor(Laikrodis[0], -1);
+	TextDrawBackgroundColor(Laikrodis[0], 255);
+	TextDrawBoxColor(Laikrodis[0], 50);
+	TextDrawUseBox(Laikrodis[0], 0);
+	TextDrawSetProportional(Laikrodis[0], 1);
+	TextDrawSetSelectable(Laikrodis[0], 0);
+
+	SiandienosData[0] = TextDrawCreate(577.000000, 4.000000, "0000-00-00");
+	TextDrawFont(SiandienosData[0], 3);
+	TextDrawLetterSize(SiandienosData[0], 0.308331, 1.699998);
+	TextDrawTextSize(SiandienosData[0], 400.000000, 66.500000);
+	TextDrawSetOutline(SiandienosData[0], 1);
+	TextDrawSetShadow(SiandienosData[0], 0);
+	TextDrawAlignment(SiandienosData[0], 2);
+	TextDrawColor(SiandienosData[0], -1);
+	TextDrawBackgroundColor(SiandienosData[0], 255);
+	TextDrawBoxColor(SiandienosData[0], 50);
+	TextDrawUseBox(SiandienosData[0], 0);
+	TextDrawSetProportional(SiandienosData[0], 1);
+	TextDrawSetSelectable(SiandienosData[0], 0);
+}
+
 stock LoadJobVehicles()
 {
 	medikucar[0] = CreateVehicle(416,-2591.7476,625.7371,14.0230,107.6049,3,8,600);
@@ -7529,16 +8850,16 @@ function LoadJobs()
 		{
 			new jobID;
 			cache_get_value_index_int(row, 0, jobID);
-			cache_get_value_index_int(row, 1, DarboInfo[jobID][DarboFondas]);
+			cache_get_value_index_int(row, 5, DarboInfo[jobID][DarboFondas]);
 
-			cache_get_value_index(row, 3, DarboInfo[jobID][drk],24);
-			cache_get_value_index(row, 4, DarboInfo[jobID][pav], 24);
+			cache_get_value_index(row, 1, DarboInfo[jobID][drk],24);
+			cache_get_value_index(row, 12, DarboInfo[jobID][pav], 24);
 
-			cache_get_value_index(row, 5, DarboInfo[jobID][drkpareigosenuo],31);
-			cache_get_value_index(row, 6, DarboInfo[jobID][pavpareigosenuo],31);
+			cache_get_value_index(row, 2, DarboInfo[jobID][drkpareigosenuo],31);
+			cache_get_value_index(row, 13, DarboInfo[jobID][pavpareigosenuo],31);
 
-			cache_get_value_index_bool(row, 7, DarboInfo[jobID][dirba]);
-			cache_get_value_index_int(row, 8, DarboInfo[jobID][nedirbsiki]);
+			cache_get_value_index_bool(row, 6, DarboInfo[jobID][dirba]);
+			cache_get_value_index_int(row, 7, DarboInfo[jobID][nedirbsiki]);
 
 			if(DarboInfo[jobID][dirba] == false && DarboInfo[jobID][nedirbsiki] <= gettime())
 			{
@@ -7546,17 +8867,38 @@ function LoadJobs()
 				DarboInfo[jobID][nedirbsiki] = 0;
 			}
 
-			cache_get_value_index_int(row, 9, DarboInfo[jobID][dienosminimumasMIN]);
-			cache_get_value_index_int(row, 10, DarboInfo[jobID][dienosminimumasPAGYD]);
-			cache_get_value_index_int(row, 11, DarboInfo[jobID][dienosminimumasBAUDOS]);
+			cache_get_value_index_int(row, 8, DarboInfo[jobID][dienosminimumasMIN]);
+			cache_get_value_index_int(row, 14, DarboInfo[jobID][dienosminimumasPAGYD]);
+			cache_get_value_index_int(row, 9, DarboInfo[jobID][dienosminimumasBAUDOS]);
 
-			cache_get_value_index_bool(row, 12, DarboInfo[jobID][arijungta]);
-			cache_get_value_index(row, 13, DarboInfo[jobID][direktoriauszinute]);
+			cache_get_value_index_bool(row, 10, DarboInfo[jobID][arijungta]);
+			cache_get_value_index(row, 11, DarboInfo[jobID][direktoriauszinute]);
+
+			cache_get_value_index(row, 15, DarboInfo[jobID][Rangas1], 30);
+			cache_get_value_index(row, 16, DarboInfo[jobID][Rangas2], 30);
+			cache_get_value_index(row, 17, DarboInfo[jobID][Rangas3], 30);
+			cache_get_value_index(row, 18, DarboInfo[jobID][Rangas4], 30);
+			cache_get_value_index(row, 19, DarboInfo[jobID][Rangas5], 30);
+			cache_get_value_index(row, 20, DarboInfo[jobID][Rangas6], 30);
+
+			cache_get_value_index_int(row, 21, DarboInfo[jobID][Skin1_male]);
+			cache_get_value_index_int(row, 22, DarboInfo[jobID][Skin2_male]);
+			cache_get_value_index_int(row, 23, DarboInfo[jobID][Skin3_male]);
+			cache_get_value_index_int(row, 24, DarboInfo[jobID][Skin4_male]);
+			cache_get_value_index_int(row, 25, DarboInfo[jobID][Skin5_male]);
+			cache_get_value_index_int(row, 26, DarboInfo[jobID][Skin6_male]);
+
+			cache_get_value_index_int(row, 27, DarboInfo[jobID][Skin1_female]);
+			cache_get_value_index_int(row, 28, DarboInfo[jobID][Skin2_female]);
+			cache_get_value_index_int(row, 29, DarboInfo[jobID][Skin3_female]);
+			cache_get_value_index_int(row, 30, DarboInfo[jobID][Skin4_female]);
+			cache_get_value_index_int(row, 31, DarboInfo[jobID][Skin5_female]);
+			cache_get_value_index_int(row, 32, DarboInfo[jobID][Skin6_female]);
 		}
 
-		cache_get_value_index_int(0, 2, MEDIKU_XP);
-		cache_get_value_index_int(1, 2, POLICININKU_XP);
-		cache_get_value_index_int(2,2, ARMIJOS_XP);
+		cache_get_value_index_int(0, 4, MEDIKU_XP);
+		cache_get_value_index_int(1, 4, POLICININKU_XP);
+		cache_get_value_index_int(2, 4, ARMIJOS_XP);
 
 		new isidarbinimai[100];
 		format(isidarbinimai, sizeof(isidarbinimai), "{ff8c00}Medikai\n{ffffff}Reikalinga patirtis - {ff8c00}%s XP", konvertuoti_pinigus(MEDIKU_XP));
@@ -7685,14 +9027,32 @@ stock SaugojamDarboPelnus()
 
 stock SaugojamDarba()
 {
-	mysql_format(connectionHandle, query, 400, "UPDATE darbai SET patirtis = '%i', pinigaifonde = '%i', dirba = '%i', nedirbsiki = '%i', dienosminimumasMIN = '%i', dienosminimumasPAGYD = '%i', arijungta = '%i', zinute = '%s' WHERE jobID = '1'", MEDIKU_XP, DarboInfo[1][DarboFondas], DarboInfo[1][dirba], DarboInfo[1][nedirbsiki], DarboInfo[1][dienosminimumasMIN], DarboInfo[1][dienosminimumasPAGYD], DarboInfo[1][arijungta], DarboInfo[1][direktoriauszinute]);
+	mysql_format(connectionHandle, query, 400, "UPDATE darbai SET patirtis = '%i', pinigaifonde = '%i', dirba = '%i', nedirbsiki = '%i', dienosminimumasMIN = '%i', dienosminimumasPAGYD = '%i', arijungta = '%i', zinute = '%s' WHERE jobID = '1'", \
+		MEDIKU_XP, DarboInfo[1][DarboFondas], DarboInfo[1][dirba], DarboInfo[1][nedirbsiki], DarboInfo[1][dienosminimumasMIN], DarboInfo[1][dienosminimumasPAGYD], DarboInfo[1][arijungta], DarboInfo[1][direktoriauszinute]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-	mysql_format(connectionHandle, query, 400, "UPDATE darbai SET patirtis = '%i', pinigaifonde = '%i', dirba = '%i', nedirbsiki = '%i', dienosminimumasMIN = '%i', dienosminimumasBAUDOS = '%i', arijungta = '%i', zinute = '%s' WHERE jobID = '2'", POLICININKU_XP, DarboInfo[2][DarboFondas], DarboInfo[2][dirba], DarboInfo[2][nedirbsiki], DarboInfo[2][dienosminimumasMIN], DarboInfo[2][dienosminimumasBAUDOS], DarboInfo[2][arijungta], DarboInfo[2][direktoriauszinute]);
+	mysql_format(connectionHandle, query, 400, "UPDATE darbai SET patirtis = '%i', pinigaifonde = '%i', dirba = '%i', nedirbsiki = '%i', dienosminimumasMIN = '%i', dienosminimumasBAUDOS = '%i', arijungta = '%i', zinute = '%s' WHERE jobID = '2'", \	
+		POLICININKU_XP, DarboInfo[2][DarboFondas], DarboInfo[2][dirba], DarboInfo[2][nedirbsiki], DarboInfo[2][dienosminimumasMIN], DarboInfo[2][dienosminimumasBAUDOS], DarboInfo[2][arijungta], DarboInfo[2][direktoriauszinute]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-	mysql_format(connectionHandle, query, 400, "UPDATE darbai SET patirtis = '%i', pinigaifonde = '%i', dirba = '%i', nedirbsiki = '%i', dienosminimumasMIN = '%i', dienosminimumasBAUDOS = '%i', arijungta = '%i', zinute = '%s' WHERE jobID = '3'", ARMIJOS_XP, DarboInfo[3][DarboFondas], DarboInfo[3][dirba], DarboInfo[3][nedirbsiki], DarboInfo[3][dienosminimumasMIN], DarboInfo[3][dienosminimumasBAUDOS], DarboInfo[3][arijungta], DarboInfo[3][direktoriauszinute]);
+	mysql_format(connectionHandle, query, 400, "UPDATE darbai SET patirtis = '%i', pinigaifonde = '%i', dirba = '%i', nedirbsiki = '%i', dienosminimumasMIN = '%i', dienosminimumasBAUDOS = '%i', arijungta = '%i', zinute = '%s' WHERE jobID = '3'", \
+		ARMIJOS_XP, DarboInfo[3][DarboFondas], DarboInfo[3][dirba], DarboInfo[3][nedirbsiki], DarboInfo[3][dienosminimumasMIN], DarboInfo[3][dienosminimumasBAUDOS], DarboInfo[3][arijungta], DarboInfo[3][direktoriauszinute]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+	for(new i = 1; i <= 3; i++)
+	{
+		mysql_format(connectionHandle, query, 400, "UPDATE darbai SET Rangas1 = '%s', Rangas2 = '%s', Rangas3 = '%s', Rangas4 = '%s', Rangas5 = '%s', Rangas6 = '%s' WHERE jobID = '%i'", \
+			DarboInfo[i][Rangas1], DarboInfo[i][Rangas2], DarboInfo[i][Rangas3], DarboInfo[i][Rangas4], DarboInfo[i][Rangas5], DarboInfo[i][Rangas6], i);
+		mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+		mysql_format(connectionHandle, query, 400, "UPDATE darbai SET Skin1_male = '%i', Skin2_male = '%i', Skin3_male = '%i', Skin4_male = '%i', Skin5_male = '%i', Skin6_male = '%i' WHERE jobID = '%i'", \
+			DarboInfo[i][Skin1_male], DarboInfo[i][Skin2_male], DarboInfo[i][Skin3_male], DarboInfo[i][Skin4_male], DarboInfo[i][Skin5_male], DarboInfo[i][Skin6_male], i);
+		mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+		mysql_format(connectionHandle, query, 400, "UPDATE darbai SET Skin1_female = '%i', Skin2_female = '%i', Skin3_female = '%i', Skin4_female = '%i', Skin5_female = '%i', Skin6_female = '%i' WHERE jobID = '%i'", \
+			DarboInfo[i][Skin1_female], DarboInfo[i][Skin2_female], DarboInfo[i][Skin3_female], DarboInfo[i][Skin4_female], DarboInfo[i][Skin5_female], DarboInfo[i][Skin6_female], i);
+		mysql_tquery(connectionHandle, query, "SendQuery", "");
+	}
 	return 1;
 }
 
@@ -7868,18 +9228,57 @@ stock ShowInfo(playerid, pid)
 	else playerLytis = "Nenustatyta";
 	
 	new isMuted[40];
-	if(pInfo[playerid][Muted] > 0) format(isMuted, sizeof(isMuted),"Taip, dar %s",ConvertSeconds(pInfo[playerid][Muted] - gettime()));
-	else isMuted = "Ne";
+	if(pInfo[playerid][Muted] > 0 && pInfo[playerid][permamute] == 0){format(isMuted, sizeof(isMuted),"Taip, dar %s",ConvertSeconds(pInfo[playerid][Muted] - gettime()));}
+	else if(pInfo[playerid][Muted] == 0 && pInfo[playerid][permamute] == 0) isMuted = "Ne";
 	
-	new Float:health;
-	GetPlayerHealth(playerid, health);
+	if(pInfo[playerid][permamute] == 1){format(isMuted, sizeof(isMuted), "Taip, amþinai");}
+
+	new Float:hp;
+	GetPlayerHealth(playerid, hp);
 	
+	new Float:armour;
+	GetPlayerArmour(playerid, armour);
+
+	new workname[30];
+	switch(pInfo[playerid][darbas])
+	{
+		case MEDIKAI:{workname = "Medikas";}
+		case POLICININKAI:{workname = "Policijos pareigûnas";}
+		case ARMIJA:{workname = "Kareivis";}
+		case 0:{workname = "Bedarbis";}
+	}
+
+	new prizpav[40];
+	if(pInfo[playerid][priziuretojas] == ADMINPRIZIURETOJAS) prizpav = "Administratoriø";
+	else if(pInfo[playerid][priziuretojas] == VIPPRIZIURETOJAS) prizpav = "V.I.P nariø";
+	else if(pInfo[playerid][priziuretojas] == DPRIZIURETOJAS) prizpav = "Direktoriø";
+	else if(pInfo[playerid][priziuretojas] == UNBANPRIZIURETOJAS) prizpav = "UNBAN";
+	else if(pInfo[playerid][priziuretojas] == 0) prizpav = "nëra";
+
+	new glicname[20];
+	if(pInfo[playerid][glic] == 1) glicname = "turi";
+	else glicname = "neturi";
+
+
+	new sveikatpazname[50];
+	if(pInfo[playerid][sveikatpaz] == true){format(sveikatpazname, sizeof(sveikatpazname), "Turi, galios dar %s"); ConvertSeconds(pInfo[playerid][sveikatpazlaikas] - gettime());}
+
 	new str[1000], fstr[2000];
 
-	format(str, sizeof(str), "{ffffff}Vardas: {1e90ff}%s\n{ffffff}Lytis: {1e90ff}%s\n{ffffff}Sveikata: {1e90ff}%i%%\n{ffffff}Ieðkomumas: {1e90ff}%i {ffffff}lygis(-u)\n\nPinigai rankose: {1e90ff}%s€\n\n{ffffff}Uþtildytas: {1e90ff}%s\n\n{ffffff}VIP statusas: {1e90ff}%s\n{ffffff}Admin statusas: {1e90ff}%s\n\n", playerName[playerid], playerLytis, floatround(health), pInfo[playerid][gaudomumas], konvertuoti_pinigus(pInfo[playerid][pinigai]), isMuted, VIPAS, adminlvl);
+	format(str, sizeof(str), "{ffffff}Vardas: {1e90ff}%s\n{ffffff}Lytis: {1e90ff}%s\n{ffffff}Sveikata: {1e90ff}%s%%\n{ffffff}Ðarvai: {1e90ff}%s%%\n{ffffff}Pinigai rankose: {1e90ff}%s\n{ffffff}Darbas: {1e90ff}%i", \
+		playerName[playerid], playerLytis, hp, armour, pInfo[playerid][pinigai], workname);
 
 	strcat(fstr, str);
-	
+
+	format(str, sizeof(str), "\n{ffffff}Ieðkomumas: {1e90ff}%i\n{ffffff}Uþtildytas: {1e90ff}%s\n{ffffff}V.I.P: {1e90ff}%s\n{ffffff}Admin: {1e90ff}%s\n{ffffff}Priþiûrëtojas: {1e90ff}%s", \
+		GetPlayerWantedLevel(playerid), isMuted, VIPAS, adminlvl, prizpav);
+
+	strcat(fstr, str);
+
+	format(str, sizeof(str), "\n{ffffff}Sveikatos paþyma: {1e90ff}%s\n{ffffff}Ginklø licenzija: {1e90ff}%s", sveikatpazname, glicname);
+
+	strcat(fstr, str);
+
 	ShowPlayerDialog(pid, playerInfo, DIALOG_STYLE_MSGBOX, "Þaidëjo informacija", fstr, "Supratau", "");
 	return 1;
 }
@@ -7892,6 +9291,25 @@ stock Blokuoti(playerid, type, reason[],adminID, duration)
 	return 1;
 }
 
+encode_tires(tires1, tires2, tires3, tires4) 
+{
+    return tires1 | (tires2 << 1) | (tires3 << 2) | (tires4 << 3);
+}
+
+stock CreateSpikes(playerid, Float:X, Float:Y, Float:Z, Float:R, VirtualW, Interior)
+{
+	new tmpObjectID = CreateDynamicObject(2899, X, Y, Z, 0, 0, R, VirtualW, Interior);
+    SpygliaiInfo[playerid][SpygliaiX] = X;
+    SpygliaiInfo[playerid][SpygliaiY] = Y;
+    SpygliaiInfo[playerid][SpygliaiZ] = Z;
+    SpygliaiInfo[playerid][arPadeti] = true;
+    SpygliaiInfo[playerid][SpygliuObj] = tmpObjectID;
+	new padejo[100];
+	format(padejo, sizeof(padejo), "{C385E9}»{ffffff} Spyglius padëjo {C385E9}%s", playerName[playerid]);
+	SpygliaiInfo[playerid][SpygliuText] = Create3DTextLabel(padejo, -1, X, Y, Z+0.3, 10,0,0);
+    return tmpObjectID;
+}
+
 stock IsJobFromLaw(jobid)
 {
 	switch(jobid)
@@ -7900,16 +9318,6 @@ stock IsJobFromLaw(jobid)
 		case ARMIJA: return ARMIJA;
 		default: return 0;
 	}
-	return 1;
-}
-
-stock IsPriziuretojas(playerid)
-{
-	if(pInfo[playerid][dpriziuretojas] == 1) return true;
-	if(pInfo[playerid][vippriz] == 1) return true;
-	if(pInfo[playerid][adminpriz] == 1) return true;
-	if(pInfo[playerid][unbanpriziuretojas] == 1) return true;
-
 	return 1;
 }
 
@@ -8061,6 +9469,8 @@ function OnPlayerBanCheck(playerid)
 			{
 				mysql_format(connectionHandle,query, 200, "DELETE FROM `banlist` WHERE `vardas` = '%e'", playerName[playerid]);
                	mysql_tquery(connectionHandle,query,"SendQuery","");
+				MSG(playerid, RED, "- Junkitës ið naujo jûsø uþblokavimas baigësi");
+				_Kick(playerid);
 			}
 
 			MSG(playerid, RED, "- Esate laikinai uþblokuotas!");
@@ -8097,6 +9507,10 @@ function Mute(playerid)
 	{
  		MSG(playerid,0x00CC00AA,"Kalbejimo uþdraudimas pasibaige, galite kalbeti");
 		KillTimer(MuteTime[playerid]);
+
+		mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET adminmutename = '', mutelaikas = '0' WHERE vardas = '%e'", pInfo[playerid][KasUztilde], playerName[playerid]);
+		mysql_tquery(connectionHandle, query, "SendQuery");
+
 		return 1;
 	}
 	pInfo[playerid][Muted] -= 1;
@@ -8118,7 +9532,7 @@ function Mute(playerid)
 function SecondsTimer()
 {
 	chatClear++;
-	if(chatClear == 15)
+	if(chatClear == 15) // Kas 15 sec clearinamas chatas
 	{
 		foreach(new i : Player)
 		{
@@ -8129,6 +9543,18 @@ function SecondsTimer()
 		}
 		chatClear = 0;
 	}
+	new Metai,Menuo,Diena, h, m,s;
+	gettime(h, m,s);
+	getdate(Metai, Menuo, Diena);
+
+	new LaikrodzioString[30];
+
+	format(LaikrodzioString, 10, "%02d:%02d", h,m);
+	TextDrawSetString(Laikrodis[0], LaikrodzioString);
+
+	format(LaikrodzioString,30,"%d-%02d-%02d", Metai,Menuo,Diena);
+	
+	TextDrawSetString(SiandienosData[0], LaikrodzioString);
 
 	foreach(new i : Player)
 	{
@@ -8177,6 +9603,20 @@ function Game()
 	gettime(time[0], time[1], time[2]);
 	SetWorldTime(time[0]);
 
+	SaveTimer++;
+	if(SaveTimer == 20)
+	{
+		SendFormatToAll(RED, "[INFO] Saugojame þaidëjø informacijà");
+		foreach(new i : Player)
+		{
+			if(online[i])
+			{
+				_SAVE(i);
+				SaveTimer = 0;
+			}
+		}
+	}
+
 	if(time[0] == 00 && time[1] == 00)
 	{
 		foreach(new i : Player)
@@ -8203,6 +9643,7 @@ function Game()
 	}
 
 	SaugojamDarboPelnus();
+	SaugojamDarba();
 
 	for(new p, size = GetPlayerPoolSize(); p <= size; p++)
 	{
@@ -8305,100 +9746,6 @@ function AFK()
 	return 1;
 }
 
-stock ac_ResetPlayerWeapons(playerid, skip = 5)
-{
-	ac_SkipCheck[playerid] = skip;
-	ac_Reset(playerid);
-	return ResetPlayerWeapons(playerid);
-}
-
-stock ac_ResetPlayerWeapon(playerid, weaponid)
-{
-	new slot = ac_GetWeaponSlot(weaponid);
-	return ac_ClearWeaponSlot(playerid, slot);
-}
-
-stock ac_Reset(playerid)
-{
-	new reset[E_AC_WEAPONS];
-	for(new i = 0; i < 13; i++)
-	{
-		ac_Weapons[playerid][i] = reset;
-	}
-	return 1;
-}
-
-stock ac_GetWeaponSlot(weaponid)
-{
-    switch(weaponid)
-    {
-        case 1: return 0;
-        case 2..9: return 1;
-        case 22..24: return 2;
-        case 25..27: return 3;
-        case 28, 29, 32: return 4;
-        case 30, 31: return 5;
-        case 33, 34: return 6;
-        case 35..38: return 7;
-        case 16..18, 39: return 8;
-        case 41..43: return 9;
-        case 10..15: return 10;
-        case 44..46: return 11;
-        case 40: return 12;
-    }
-    return 0xFFFF;
-}
-
-stock ac_ClearWeaponSlot(playerid, slot)
-{
-	new
-		weapondata[13][2];
-	ac_SkipCheck[playerid] = 3;
-	for(new i = 0; i < 13; i++)
-	{
-		if(i != slot)
-		{
-			GetPlayerWeaponData(playerid, i, weapondata[i][0], weapondata[i][1]);
-		}
-	}
-	ac_ResetPlayerWeapons(playerid);
-	for(new i = 0; i < 13; i++)
-	{
-		if(weapondata[i][0] != 0 && weapondata[i][1] > 0 && i != slot)
-		{
-			ac_GivePlayerWeapon(playerid, weapondata[i][0], weapondata[i][1]);
-		}
-	}
-	return 1;
-}
-
-stock ac_GivePlayerWeapon(playerid, weaponid, ammo)
-{
-	new
-		slot = ac_GetWeaponSlot(weaponid);
-	if(slot != 0xFFFF)
-	{
-		ac_SkipCheck[playerid] = 2;
-		if(weaponid < 0 || weaponid > 46 || ammo < 0) return false;
-		if(ac_Weapons[playerid][slot][ac_WeaponId] != weaponid)
-		{
-			if(ac_Weapons[playerid][slot][ac_WeaponId] != 0)
-			{
-				ac_ClearWeaponSlot(playerid, slot);
-				ac_SkipCheck[playerid] = 3;
-			}
-			ac_Weapons[playerid][slot][ac_Ammo] = ammo;
-			ac_Weapons[playerid][slot][ac_WeaponId] = weaponid;
-		}
-		else if(ac_Weapons[playerid][slot][ac_WeaponId] == weaponid)
-		{
-			ac_Weapons[playerid][slot][ac_Ammo] += ammo;
-		}
-		return GivePlayerWeapon(playerid, weaponid, ammo);
-	}
-	return false;
-}
-
 
 stock ConvertSeconds(sekundes) // by Johurt
 {
@@ -8443,7 +9790,6 @@ function OnPlayerJobXPLoad(playerid)
 	}
 	return 1;
 }
-
 
 function OnPlayerDataCheck(playerid, corrupt_check)
 {
@@ -8722,6 +10068,7 @@ function _LOAD(playerid)
 	cache_set_active(pInfo[playerid][Player_Cache]);
 
 	cache_get_value_int(0, "pinigai", pInfo[playerid][pinigai]);
+	GivePlayerMoney(playerid, pInfo[playerid][pinigai]);
 
 	cache_get_value_int(0, "patirtis", pInfo[playerid][patirtis]);
 	SetPlayerScore(playerid, pInfo[playerid][patirtis]);
@@ -8747,51 +10094,51 @@ function _LOAD(playerid)
 
 	cache_get_value_int(0, "Ginklas0", weapon);
 	cache_get_value_int(0, "Ammo0", ammo);
-	ac_GivePlayerWeapon(playerid, weapon, ammo);
+	GivePlayerWeapon(playerid, weapon, ammo);
 
 	cache_get_value_int(0, "Ginklas1", weapon);
 	cache_get_value_int(0, "Ammo1", ammo);
-	ac_GivePlayerWeapon(playerid, weapon, ammo);
+	GivePlayerWeapon(playerid, weapon, ammo);
 
 	cache_get_value_int(0, "Ginklas2", weapon);
 	cache_get_value_int(0, "Ammo2", ammo);
-	ac_GivePlayerWeapon(playerid, weapon, ammo);
+	GivePlayerWeapon(playerid, weapon, ammo);
 
 	cache_get_value_int(0, "Ginklas3", weapon);
 	cache_get_value_int(0, "Ammo3", ammo);
-	ac_GivePlayerWeapon(playerid, weapon, ammo);
+	GivePlayerWeapon(playerid, weapon, ammo);
 
 	cache_get_value_int(0, "Ginklas4", weapon);
 	cache_get_value_int(0, "Ammo4", ammo);
-	ac_GivePlayerWeapon(playerid, weapon, ammo);
+	GivePlayerWeapon(playerid, weapon, ammo);
 
 	cache_get_value_int(0, "Ginklas5", weapon);
 	cache_get_value_int(0, "Ammo5", ammo);
-	ac_GivePlayerWeapon(playerid, weapon, ammo);
+	GivePlayerWeapon(playerid, weapon, ammo);
 
 	cache_get_value_int(0, "Ginklas6", weapon);
 	cache_get_value_int(0, "Ammo6", ammo);
-	ac_GivePlayerWeapon(playerid, weapon, ammo);
+	GivePlayerWeapon(playerid, weapon, ammo);
 
 	cache_get_value_int(0, "Ginklas7", weapon);
 	cache_get_value_int(0, "Ammo7", ammo);
-	ac_GivePlayerWeapon(playerid, weapon, ammo);
+	GivePlayerWeapon(playerid, weapon, ammo);
 
 	cache_get_value_int(0, "Ginklas8", weapon);
 	cache_get_value_int(0, "Ammo8", ammo);
-	ac_GivePlayerWeapon(playerid, weapon, ammo);
+	GivePlayerWeapon(playerid, weapon, ammo);
 
 	cache_get_value_int(0, "Ginklas9", weapon);
 	cache_get_value_int(0, "Ammo9", ammo);
-	ac_GivePlayerWeapon(playerid, weapon, ammo);
+	GivePlayerWeapon(playerid, weapon, ammo);
 
 	cache_get_value_int(0, "Ginklas10", weapon);
 	cache_get_value_int(0, "Ammo10", ammo);
-	ac_GivePlayerWeapon(playerid, weapon, ammo);
+	GivePlayerWeapon(playerid, weapon, ammo);
 
 	cache_get_value_int(0, "Ginklas11", weapon);
 	cache_get_value_int(0, "Ammo11", ammo);
-	ac_GivePlayerWeapon(playerid, weapon, ammo);
+	GivePlayerWeapon(playerid, weapon, ammo);
 
 	new interior;
 	cache_get_value_int(0, "Interior", interior);
@@ -8825,19 +10172,9 @@ function _LOAD(playerid)
 
 	cache_get_value_name(0, "isidarbino", pInfo[playerid][workingSince], 31);
 
-	cache_get_value_name(0, "dprizpareigosenuo", pInfo[playerid][dprizpareigosenuo]);
-
-	cache_get_value_name(0, "aprizpareigosenuo", pInfo[playerid][aprizpareigosenuo]);
-
 	cache_get_value_name(0, "drkpareigosenuo", pInfo[playerid][direkopareigosenuo]);
 
-	cache_get_value_name(0, "vipprizpareigosenuo", pInfo[playerid][vipprizpareigosenuo]);
-
-	cache_get_value_name(0, "unbanprizpareigosenuo", pInfo[playerid][unbanprizpareigosenuo]);
-
-	cache_get_value_int(0, "dpriziuretojas", pInfo[playerid][dpriziuretojas]);
-
-	cache_get_value_int(0, "dprizisp", pInfo[playerid][dprizisp]);
+	cache_get_value_int(0, "priziuretojas", pInfo[playerid][priziuretojas]);
 
 	cache_get_value_int(0, "laikoligonineje", pInfo[playerid][LaikoLigoninej]);
 	
@@ -8847,21 +10184,17 @@ function _LOAD(playerid)
 
 	cache_get_value_int(0, "direktoriaus_ispejimai", pInfo[playerid][drkisp]);
 
-	cache_get_value_int(0, "adminpriz", pInfo[playerid][adminpriz]);
-
-	cache_get_value_int(0, "adminprizisp", pInfo[playerid][adminprizisp]);
-
-	cache_get_value_int(0, "vippriz", pInfo[playerid][vippriz]);
-
-	cache_get_value_int(0, "vipprizisp", pInfo[playerid][vipprizisp]);
-
-	cache_get_value_int(0, "unbanpriziuretojas", pInfo[playerid][unbanpriziuretojas]);
-
-	cache_get_value(0, "unbanprizisp", pInfo[playerid][unbanprizisp]);
-
 	cache_get_value_int(0, "perma_mute", pInfo[playerid][permamute]);
 
     cache_get_value_int(0, "mutelaikas", pInfo[playerid][Muted]);
+
+	cache_get_value_int(0, "prizisp", pInfo[playerid][priziuretojausisp]);
+
+	cache_get_value_name(0, "prizpareigosenuo", pInfo[playerid][prizpareigosenuo], 31);
+
+	cache_get_value_int(0, "Rangas", pInfo[playerid][DarboRangas]);
+
+	cache_get_value_name(0, "adminmutename", pInfo[playerid][KasUztilde], 24);
 
     if(pInfo[playerid][Muted] > 0 || pInfo[playerid][permamute] == 1) MuteTime[playerid] = SetTimerEx("Mute", 1000, true, "i",playerid);
 
@@ -8992,28 +10325,24 @@ function _SAVE(playerid)
 		pInfo[playerid][uniforma], pInfo[playerid][wUniform], pInfo[playerid][gaudomumas], pInfo[playerid][lytis], pInfo[playerid][glic],playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `pavaduotojas` = '%i', `aisp` = '%i', `disp` = '%i', `visp` = '%i', `siandienprazaide` = '%i', `siandienpradirbo` = '%i', `dpriziuretojas` = '%i' WHERE `vardas` = '%e' LIMIT 1;", \
-		pInfo[playerid][pavaduotojas], pInfo[playerid][aisp], pInfo[playerid][disp], pInfo[playerid][visp], pInfo[playerid][siandienprazaide], pInfo[playerid][siandienpradirbo], pInfo[playerid][dpriziuretojas], playerName[playerid]);
+	mysql_format(connectionHandle, query, 300, "UPDATE `zaidejai` SET `pavaduotojas` = '%i', `aisp` = '%i', `disp` = '%i', `visp` = '%i', `siandienprazaide` = '%i', `siandienpradirbo` = '%i', `priziuretojas` = '%i' WHERE `vardas` = '%e' LIMIT 1;", \
+		pInfo[playerid][pavaduotojas], pInfo[playerid][aisp], pInfo[playerid][disp], pInfo[playerid][visp], pInfo[playerid][siandienprazaide], pInfo[playerid][siandienpradirbo], pInfo[playerid][priziuretojas], playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 	mysql_format(connectionHandle, query, 300, "UPDATE zaidejai SET `lastloginDATE` = '%s', `lastloginIP` = '%s', `laikoligonineje` = '%i', `pagydymai` = '%i', `baudos` = '%i', `sveikatospazyma` = '%i', `sveikatospazymoslaikas` = '%i' WHERE vardas = '%e' LIMIT 1;", \
 		GautiData(0), IPAS[playerid], pInfo[playerid][LaikoLigoninej], pInfo[playerid][pagydymai], pInfo[playerid][baudos], pInfo[playerid][sveikatpaz], pInfo[playerid][sveikatpazlaikas], playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
-	mysql_format(connectionHandle, query, 300, "UPDATE zaidejai SET `adminpriz` = '%i', `vippriz` = '%i', `direktoriaus_ispejimai` = '%i' WHERE vardas = '%e' LIMIT 1;", \
-		pInfo[playerid][adminpriz], pInfo[playerid][vippriz], pInfo[playerid][drkisp], playerName[playerid]);
-	mysql_tquery(connectionHandle, query, "SendQuery", "");
-
-	mysql_format(connectionHandle, query, 300, "UPDATE zaidejai SET `vipprizisp` = '%i', `adminprizisp` = '%i', `dprizisp` = '%i' WHERE vardas = '%e' LIMIT 1;", \
-		pInfo[playerid][vipprizisp], pInfo[playerid][adminprizisp], pInfo[playerid][dprizisp], playerName[playerid]);
-	mysql_tquery(connectionHandle, query, "SendQuery", "");
-
-	mysql_format(connectionHandle, query, 300, "UPDATE zaidejai SET `unbanpriziuretojas` = '%i', `unbanprizisp` = '%i', `perma_mute` = '%i' WHERE vardas = '%e' LIMIT 1;", \
-		pInfo[playerid][unbanpriziuretojas], pInfo[playerid][unbanprizisp], pInfo[playerid][permamute], playerName[playerid]);
+	mysql_format(connectionHandle, query, 250, "UPDATE zaidejai SET `prizisp` = '%i', `direktoriaus_ispejimai` = '%i', `perma_mute` = '%i' WHERE vardas = '%e' LIMIT 1;", \
+		pInfo[playerid][priziuretojausisp], pInfo[playerid][drkisp], pInfo[playerid][permamute], playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 
 	mysql_format(connectionHandle, query, 300, "UPDATE darbaiSuPakvietimais_xp SET `MedikoXP` = '%i', `PolicininkoXP` = '%i', `ArmijosXP` = '%i' WHERE Vardas = '%e' LIMIT 1;", \
 		pInfo[playerid][zaidejoMedikuXP], pInfo[playerid][zaidejoPolicijosXP], pInfo[playerid][zaidejoArmijosXP], playerName[playerid]);
+	mysql_tquery(connectionHandle, query, "SendQuery", "");
+
+	mysql_format(connectionHandle, query, 140, "UPDATE zaidejai SET `skin` = '%i', Rangas = '%i', adminmutename = '%s' WHERE vardas = '%e' LIMIT 1;", \
+		pInfo[playerid][skin], pInfo[playerid][DarboRangas], pInfo[playerid][KasUztilde], playerName[playerid]);
 	mysql_tquery(connectionHandle, query, "SendQuery", "");
 	return 1;
 
@@ -9021,14 +10350,14 @@ function _SAVE(playerid)
 
 function LoadPickups()
 {
-	pickups[0][ginkline] = CreateDynamicPickup(19197, 1,-2626.7031,208.8613,4.5943);
-	CreateDynamic3DTextLabel("{4bbaed}Ginklø{ffffff} parduotuvë\nNorëdamas áeiti spausk {4bbaed}ENTER", -1, -2626.7031,208.8613,4.5943, 20);
+	pickups[0][ginkline] = CreateDynamicPickup(19197, 1,-2626.4158,208.4830,4.8125); 
+	CreateDynamic3DTextLabel("{4bbaed}Ginklø{ffffff} parduotuvë\nNorëdamas áeiti spausk {4bbaed}ENTER", -1, -2626.4158,208.4830,4.8125, 20);
 
-	pickups[0][ginklinesisejimas] = CreateDynamicPickup(19197, 1,315.7799,-142.7455,999.6016);
-	CreateDynamic3DTextLabel("{4bbaed}Ginklø{ffffff} parduotuvë\nNorëdamas iðeiti spausk {4bbaed}ENTER", -1, 315.7799,-142.7455,999.6016, 20);
+	pickups[0][ginklinesisejimas] = CreateDynamicPickup(19197, 1,285.4547,-40.8078,1001.5156);
+	CreateDynamic3DTextLabel("{4bbaed}Ginklø{ffffff} parduotuvë\nNorëdamas iðeiti spausk {4bbaed}ENTER", -1, 285.4547,-40.8078,1001.5156, 20);
 
-	pickups[0][ginklinesgun] = CreateDynamicPickup(1274,2,314.1385,-133.0679,999.6016);
-	CreateDynamic3DTextLabel("{1fbf79}Ginklø{ffffff} pardavimas", -1, 314.1385,-133.0679,999.6016, 20);
+	pickups[0][ginklinesgun] = CreateDynamicPickup(1274,2,291.1360,-34.7810,1001.5156);
+	CreateDynamic3DTextLabel("{1fbf79}Ginklø{ffffff} pardavimas", -1, 291.1360,-34.7810,1001.5156, 20);
 
 	pickups[0][ligoninesiejimas]=CreateDynamicPickup(19197, 1, -2664.7969,640.1555,14.4531);
 	CreateDynamic3DTextLabel("{4bbaed}Ligoninë{ffffff}\nNorëdamas áeiti spausk {4bbaed}ENTER",-1,-2664.7969,640.1555,14.4531, 20);
@@ -9080,6 +10409,9 @@ function LoadPickups()
 
 	pickups[0][gunlicbuypickup] = CreateDynamicPickup(1274, 2, 292.0857, -30.8236, 1001.5156);
 	CreateDynamic3DTextLabel("{2E9525}Ginklø licenzija", -1, 292.0857, -30.8236, 1001.5156, 20);
+
+	pickups[0][admbauda] = CreateDynamicPickup(1274, 2, 251.9027,117.3558,1003.2188);
+	CreateDynamic3DTextLabel("{ffffff}Susimokëjimas uþ {8B7152}administracines{ffffff} baudas", -1, 251.9027,117.3558,1003.2188, 20);
 	return 1;
 }	
 

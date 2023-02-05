@@ -6,6 +6,7 @@
 
 #include <YSI\y_va>
 
+
 stock LoadStaticVehiclesFromFile(const filename[])
 {
 	new File:file_ptr;
@@ -248,5 +249,3 @@ stock ReturnUser(text[])
 	
 	return userid;
 }
-
-//----------------------------------------------------------
